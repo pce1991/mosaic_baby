@@ -19,6 +19,8 @@
 #include "math/rand.h"
 #include "math/geometry.h"
 
+#include "math/noise.h"
+
 #include "math/color.h"
 
 #endif

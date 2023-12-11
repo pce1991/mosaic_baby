@@ -247,17 +247,61 @@ vec2 GridPositionToWorldPosition(vec2i gridPosition) {
 void DrawTile(vec2i position, vec4 color) {
     vec2 worldPos = GridPositionToWorldPosition(position);
 
-#if 1
+#if 0
     DrawRect(&Game->rectBuffer, worldPos, V2(Mosaic->tileSize * 0.5f), color);
 #else 
     // @TODO: look up the texture on the tile
 
     int32 bokehIndex = (position.x + position.y) % GM.bokehMasks.count;
+    //bokehIndex = 0;
 
-    // @TODO: add some glow as a post-process
-    DrawMaskedQuad(worldPos,
-                   V2(Mosaic->tileSize * 0.5f),
-                   sinf(position.x * 1.2f),
+    real32 scaledSize = Mosaic->tileSize * 0.55f;
+    real32 scaleOffset = (1 + sinf((Time + position.x * position.y) * 0.5) * 0.5f) * 0.2f;
+
+    real32 offsetRange = Mosaic->tileSize * 0.35f;
+    vec2 posOffset = V2(sinf((Time + position.x + position.y) * 0.4f),
+                        cosf((Time + position.x + position.y) * 0.4f)) * offsetRange;
+
+    real32 rot = 0.0f;
+
+    posOffset = V2(0);
+    scaledSize = Mosaic->tileSize * 0.5f;
+    scaleOffset = 0.0f;
+    rot = 0;
+
+#if STAINED_GLASS
+    // @TODO: input some control over these outside the render loop
+    posOffset = V2(0);
+    scaledSize = Mosaic->tileSize * 0.5f;
+    scaleOffset = 0.0f;
+    rot = sinf((Time * 0.1f) + position.x + position.y) * _PI;
+
+    posOffset = V2(0);
+    scaledSize = Mosaic->tileSize * 1;
+    scaleOffset = (1 + sinf((Time + position.x + position.y) * 0.5) * 0.5f) * 0.2;
+    rot = sinf((Time * 0.1f) + position.x + position.y) * _PI;
+    rot = (_PI * position.x + position.y) + (sinf(Time * 0.1f + position.x + position.y) * _PI * 0.1f);
+#elif PAINT_1
+    posOffset = V2(0);
+    scaledSize = Mosaic->tileSize * 0.5f;
+    scaleOffset = (1 + sinf((Time + position.x + position.y + color.r + color.g + color.b) * 0.5) * 0.5f) * 0.5;
+    rot = 0;
+
+#elif PAINT_2
+    int32 index = position.x + (position.y * Mosaic->gridWidth);
+    real32 noise = Sum1f(&Perlin1f, ((Time * 0.1f + index) * 0.2f), 1.0f, 1.0f);
+
+    posOffset = V2(0);
+    scaledSize = Mosaic->tileSize * 0.9;
+    scaleOffset = 0;
+    rot = noise * _PI;
+#endif
+
+    DrawMaskedQuad(worldPos + posOffset,
+                   V2(scaledSize + scaleOffset),
+                   // @TODO: allow a lil bit of overlap
+                   rot,
+                   
                    //0.0f,
                    color,
                    &GM.bokehMasks[bokehIndex]);
@@ -635,6 +679,25 @@ void MosaicRender() {
         
         DrawRect(pos, Mosaic->gridSize * 0.5f, V4(0, 0, 0, 1));
     }
+
+    // @HACK: rendering a background
+#if 0
+    vec2 worldPos = V2(0);
+    real32 scaledSize = 40.0f;
+    real32 scaleOffset = 0.0f;
+    real32 rot = 0;
+
+    vec4 color = V4(0.0f, 0.1f, 0.25f, 1.0f);
+    
+    DrawMaskedQuad(worldPos,
+                   V2(scaledSize + scaleOffset),
+                   // @TODO: allow a lil bit of overlap
+                   rot,
+                   
+                   //0.0f,
+                   color,
+                   &GM.bokehMasks[0]);
+#endif
 
     for (int i = 0; i < Mosaic->tileCapacity; i++) {
         MTile*tile = &tiles[i];

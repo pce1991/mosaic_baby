@@ -1,20 +1,12 @@
 
-Entity system
-- think I want components so we can have talking trees and such
-- so I guess we want a Substance/Element component (wood, )
-- and does a tree/rock/pool just become a thing with a Sprite + Body + Element? Because if we want a wish like "turn trees into rocks" we can do that with entities, but it's a bit weirder for "turn all wood into stone" 
-  - I think those wishes aren't super interesting tho, things that move items/characters/world is much more interesting
-Per-screen levels
-Collisions
-- acceleration structure
-Chemistry engine
-Player actions: fire bow
-CPU pixel shaders sound cute
-Animations
-Arrow ammo for scrambly feel
-
-
-
 Rendering:
 Want masks for the tiles
 Want instanced sprite rendering I think as a core mosaic feature
+I want to be able to draw multiple quads over the same tile which will make using this much more powerful: https://mrmotarius.itch.io/paint-tiles. 
+
+@TODO: 
+for coverage on cells we could draw a big tile which covers the whole area
+
+@TODO: pass in an A and B color and lerp between them instead of always scaling to black
+
+@TODO: I actually really like the overlapping tiles thing, but I think I want to choose what a depth order so there's more control

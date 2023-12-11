@@ -1,6 +1,9 @@
 
 #include "entity.h"
 
+#define STAINED_GLASS 0
+#define PAINT_1 0
+#define PAINT_2 1
 
 enum GameState {
                 GameState_Init,
@@ -18,6 +21,7 @@ struct GameData {
 
 #define FOREACH_GAME(OP, ...)                   \
     OP(EmptyGame, __VA_ARGS__)                  \
+    OP(MowTheLawnSimple, __VA_ARGS__)                 \
     OP(MowTheLawn, __VA_ARGS__)                 \
     OP(ChaseColor, __VA_ARGS__)                 \
     OP(HerdColor, __VA_ARGS__)                 \
@@ -251,15 +255,41 @@ void MyMosaicInit() {
     {
         GM.bokehMasks = MakeDynamicArray<Sprite>(&GM.arena, 16);
 
+#if STAINED_GLASS
         {
             Sprite *s = PushBackPtr(&GM.bokehMasks);
-            LoadSprite(s, "data/bokeh/bokeh1.png");
+            LoadSprite(s, "data/bokeh/bokeh_paint1.png");
         }
 
         {
             Sprite *s = PushBackPtr(&GM.bokehMasks);
-            LoadSprite(s, "data/bokeh/bokeh2.png");
+            LoadSprite(s, "data/bokeh/bokeh_paint2.png");
         }
+#elif PAINT_1
+        {
+            Sprite *s = PushBackPtr(&GM.bokehMasks);
+            LoadSprite(s, "data/paint/dots.png");
+        }
+#elif PAINT_2
+        // {
+        //     Sprite *s = PushBackPtr(&GM.bokehMasks);
+        //     LoadSprite(s, "data/paint/waves.png");
+        // }
+        {
+            Sprite *s = PushBackPtr(&GM.bokehMasks);
+            LoadSprite(s, "data/paint/smear2.png");
+        }
+        {
+            Sprite *s = PushBackPtr(&GM.bokehMasks);
+            LoadSprite(s, "data/paint/smear.png");
+        }
+#endif
+        #if 0
+        {
+            Sprite *s = PushBackPtr(&GM.bokehMasks);
+            LoadSprite(s, "data/sprites/brush_white.png");
+        }
+#endif
     }
 
     GM.gameMode = GameMode_MainMenu;

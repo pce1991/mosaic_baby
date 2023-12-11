@@ -12,7 +12,9 @@ void main() {
     vec2 uv = texcoord;
     vec4 textureContrib = texture(texture0, uv).rgba;
 
+    // @TODO: I think we want to use alpha from the mask so that blacks are still black and aren't
+    // blended with background. 
     // using alpha is good option for using arbitrary sprites and not specific masks
-    color = maskColor * textureContrib.a;
+    color = maskColor * textureContrib.r;
     //color.a = textureContrib.a * 0.5f;
 }
