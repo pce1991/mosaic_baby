@@ -275,6 +275,11 @@ void MyMosaicInit() {
         //     Sprite *s = PushBackPtr(&GM.bokehMasks);
         //     LoadSprite(s, "data/paint/waves.png");
         // }
+
+        {
+            Sprite *s = PushBackPtr(&GM.bokehMasks);
+            LoadSprite(s, "data/paint/dots.png");
+        }
         {
             Sprite *s = PushBackPtr(&GM.bokehMasks);
             LoadSprite(s, "data/paint/smear2.png");
