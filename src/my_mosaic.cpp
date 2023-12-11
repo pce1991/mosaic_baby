@@ -1,7 +1,7 @@
 
 #include "entity.h"
 
-#define STAINED_GLASS 0
+#define STAINED_GLASS 1
 #define PAINT_1 0
 #define PAINT_2 1
 
