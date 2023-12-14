@@ -266,7 +266,7 @@ void MyMosaicInit() {
 #if STAINED_GLASS
         {
             Sprite *s = PushBackPtr(&GM.bokehMasks);
-            LoadSprite(s, "data/bokeh/bokeh_paint1_alpha.png");
+            LoadSprite(s, "data/bokeh/bokeh_paint1.png");
         }
 
         {

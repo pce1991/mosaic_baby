@@ -781,7 +781,7 @@ void LayoutGlyphs(FontTable *font, const char *string, int32 count, real32 size,
         real32 tempX = x;
         int32 tempI = i;
         char tempC = string[tempI];
-        while (tempC != ' ') {
+        while (tempC != ' ' && tempI < count) {
             int32 tempCodepoint = tempC - 25;
 
             tempX += font->glyphs[tempCodepoint].lowerLeft.x * size;
