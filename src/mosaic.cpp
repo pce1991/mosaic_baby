@@ -336,6 +336,21 @@ int32 MTile_Comparator(MTile const *a, MTile const *b) {
         return 1;
     }
     else {
+        // @TODO: we need to know the start of a range for a given sprite
+        // So first we need to know how many sprites there are
+        // but also how many different depths those sprites are rendered at
+        // Then I think we just walk the sorted list and every time our depth or
+        // our sprite changes we start a new batch.
+
+        // @NOTE: if they are using different sprites we cant defer to their position because
+        // that would create more batches, so we sort by the sprite pointer
+        if (a->sprite < b->sprite) {
+            return -1;
+        }
+        else if (a->sprite > b->sprite) {
+            return 1;
+        }
+        
         // they have equal depth and so we use position
         int32 indexA = a->position.x + (a->position.y * Mosaic->gridWidth);
         int32 indexB = b->position.x + (b->position.y * Mosaic->gridWidth);
@@ -785,11 +800,54 @@ void MosaicRender() {
 
     Quicksort(sortedTiles, sizeof(MTile), Mosaic->tileCapacity, (SortComparator)&MTile_Comparator);
 
+#if 1
+    DynamicArray<DrawTileCommand> commands = MakeDynamicArray<DrawTileCommand>(&Game->frameMem, 64);
+
+    DrawTileCommand *command = PushBackPtr(&commands);
+    command->depth = sortedTiles[0].depth;
+    command->sprite = sortedTiles[0].sprite;
+
+    for (int i = 0; i < Mosaic->tileCapacity; i++) {
+        MTile* tile = &sortedTiles[i];
+
+        if (tile->depth > command->depth) {
+            command = PushBackPtr(&commands);
+
+            *command = {};
+            command->depth = tile->depth;
+            command->sprite = tile->sprite;
+            command->startIndex = i;
+        }
+        else if (tile->sprite > command->sprite) {
+            command = PushBackPtr(&commands);
+            
+            *command = {};
+            command->depth = tile->depth;
+            command->sprite = tile->sprite;
+            command->startIndex = i;
+        }
+
+        command->count++;
+    }
+
+    // @TODO: actually instance these
+    for (int i = 0; i < commands.count; i++) {
+        DrawTileCommand *command = &commands[i];
+
+        For (j, command->count) {
+            MTile* tile = &sortedTiles[command->startIndex + j];
+                    
+            DrawTile(tile);
+        }
+    }
+#else
+    
     for (int i = 0; i < Mosaic->tileCapacity; i++) {
         MTile* tile = &sortedTiles[i];
 
         DrawTile(tile);
     }
+#endif
 
 #if 0
     for (int i = 0; i < Mosaic->tileCapacity; i++) {

@@ -22,10 +22,13 @@ struct MosaicText {
 
 struct DrawTileCommand {
     int32 depth;
-    // @TODO: organize by sprite also
+    Sprite *sprite;
+
+    int32 startIndex;
+    int32 count;
     
     // Rendering order is that we'll do all the sprites at depth N, then all at depth N + 1, etc
-    DynamicArray<MTile> tiles;
+    //DynamicArray<MTile> tiles;
 };
 
 struct MosaicMem {
