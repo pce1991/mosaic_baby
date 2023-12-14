@@ -656,6 +656,7 @@ void RenderTexturedTileBuffer(TexturedTileBuffer *buffer, int32 startIndex, int3
 
     int32 stride = sizeof(TexturedTileRenderData);
 
+    // @BUG: we shouldnt need to buffer the whole data each instanced call
     glBindBuffer(GL_ARRAY_BUFFER, buffer->bufferID);
     glBufferData(GL_ARRAY_BUFFER, buffer->bufferSize, buffer->data, GL_STREAM_DRAW);
 
@@ -687,9 +688,12 @@ void RenderTexturedTileBuffer(TexturedTileBuffer *buffer, int32 startIndex, int3
     glVertexAttribPointer(model + 3, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(vec4) * 4);
     glVertexAttribDivisor(model + 3, 1);
 
-    //glDrawElementsInstanced(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (uint8 *)NULL + 0, buffer->count);
-    glDrawElementsInstanced(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (uint8 *)NULL + (sizeof(TexturedTileRenderData) * startIndex), count);
-    //glDrawElementsInstanced(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (uint8 *)NULL + startIndex, count);
+    glDrawElementsInstancedBaseInstance(GL_TRIANGLES,
+                            mesh->indexCount,
+                            GL_UNSIGNED_INT,
+                            (uint8 *)NULL + 0,
+                            count,
+                            startIndex);
     
     glDisableVertexAttribArray(vert);
     glDisableVertexAttribArray(color);
