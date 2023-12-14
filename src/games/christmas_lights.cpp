@@ -79,7 +79,7 @@ void ChristmasLightsUpdate() {
 
             vec4 color = Lerp(colorA, colorB, normNoise);
             SetTileColor(pos, color);
-            SetTileColorB(pos, WithAlpha((color * 0.2f), 1.0f));
+            SetTileColorB(pos, WithAlpha(color * 0.2f, 1.0f));
             //SetTileColorB(pos, V4(0));
             
             SetTileRotation(pos, (x + (y * 19)) * _PI * 0.08f);

@@ -271,7 +271,7 @@ void MyMosaicInit() {
 
         {
             Sprite *s = PushBackPtr(&GM.bokehMasks);
-            LoadSprite(s, "data/bokeh/waves.png");
+            LoadSprite(s, "data/bokeh/waves_alpha.png");
         }
         
 #elif PAINT_1

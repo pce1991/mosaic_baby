@@ -35,4 +35,6 @@
 #define PASTEL_YELLOW RGBHex(faf884)
 #define PASTEL_PURPLE RGBHex(f2a2e8)
 
-#define WithAlpha(color, a) V4(color.r, color.g, color.b, a)    
+inline vec4 WithAlpha(vec4 color, real32 alpha) {
+    return V4((color.r), (color.g), (color.b), alpha);
+}
