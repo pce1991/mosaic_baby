@@ -15,8 +15,8 @@ void ChristmasLightsInit() {
     TileWidth = 8;
     TileHeight = 8;
 
-    GridWidth = 6;
-    GridHeight = 6;
+    GridWidth = 10;
+    GridHeight = 10;
 
     SetMosaicGridSize(TileWidth * GridWidth,
                       TileHeight * GridHeight);
@@ -79,7 +79,8 @@ void ChristmasLightsUpdate() {
 
             SetTileColor(pos, Lerp(colorA, colorB, normNoise));
             SetTileRotation(pos, (x + (y * 19)) * _PI * 0.08f);
-            SetTileScale(pos, 2.0f + (normNoise * 0.9f));
+            //SetTileScale(pos, 2.0f + (normNoise * 0.9f));
+            SetTileScale(pos, 1.0f);
             SetTileSprite(pos, 2);
             SetTileDepth(pos, 0);
 
@@ -88,13 +89,12 @@ void ChristmasLightsUpdate() {
         }
     }
 
-    // For (i, Data->dots.count) {
-    //     CLDot *dot = &Data->dots[i];
+    For (i, Data->dots.count) {
+        CLDot *dot = &Data->dots[i];
 
-    //     MDrawSprite(dot->position, &Data->dotSprite);
-    //     break;
-    // }
+        MDrawSprite(dot->position, &Data->dotSprite);
+    }
 
     // @TODO: pass in parameters along with the sprite for scale/rot/sprite/depth
-    MDrawSprite(V2(30, 20), &Data->dotSprite);
+    //MDrawSprite(V2(30, 20), &Data->dotSprite);
 }

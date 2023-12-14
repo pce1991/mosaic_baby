@@ -656,9 +656,8 @@ void RenderTexturedTileBuffer(TexturedTileBuffer *buffer, int32 startIndex, int3
 
     int32 stride = sizeof(TexturedTileRenderData);
 
-    // @BUG: we shouldnt need to buffer the whole data each instanced call
     glBindBuffer(GL_ARRAY_BUFFER, buffer->bufferID);
-    glBufferData(GL_ARRAY_BUFFER, buffer->bufferSize, buffer->data, GL_STREAM_DRAW);
+    glBufferSubData(GL_ARRAY_BUFFER, stride * startIndex, stride * count, &buffer->data[startIndex]);
 
     int model = glGetAttribLocation(shader->programID, "instance_model");
     int color = glGetAttribLocation(shader->programID, "instance_color");
@@ -667,6 +666,10 @@ void RenderTexturedTileBuffer(TexturedTileBuffer *buffer, int32 startIndex, int3
     glEnableVertexAttribArray(color);
     glVertexAttribPointer(color, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0);
     glVertexAttribDivisor(color, 1);
+
+    // glEnableVertexAttribArray(color);
+    // glVertexAttribPointer(color, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0);
+    // glVertexAttribDivisor(color, 1);
 
     // model column 0
     glEnableVertexAttribArray(model);
