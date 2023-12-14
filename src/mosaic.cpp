@@ -565,6 +565,13 @@ inline void SetTileColor(vec2 position, vec4 color) {
     }
 }
 
+inline void SetTileColorB(vec2 position, vec4 color) {
+    MTile*t = GetTile(position);
+    if (t) {
+        t->colorB = color;
+    }
+}
+
 inline void SetTileScale(vec2 position, real32 scale) {
     MTile*t = GetTile(position);
     if (t) {
@@ -820,7 +827,8 @@ void MosaicRender() {
             TexturedTileRenderData data = {};
             real32 scale = (Mosaic->tileSize * 0.5) * tile->scale;
             
-            data.color = tile->color;
+            data.colorA = tile->color;
+            data.colorB = tile->colorB;
             data.model = TRS(V3(worldPos, 0),
                              AxisAngle(V3(0, 0, 1), tile->rotation),
                              V3(scale, scale, 0.0f));

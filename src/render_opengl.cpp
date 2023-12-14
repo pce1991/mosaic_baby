@@ -660,35 +660,37 @@ void RenderTexturedTileBuffer(TexturedTileBuffer *buffer, int32 startIndex, int3
     glBufferSubData(GL_ARRAY_BUFFER, stride * startIndex, stride * count, &buffer->data[startIndex]);
 
     int model = glGetAttribLocation(shader->programID, "instance_model");
-    int color = glGetAttribLocation(shader->programID, "instance_color");
+    int colorA = glGetAttribLocation(shader->programID, "instance_colorA");
+    int colorB = glGetAttribLocation(shader->programID, "instance_colorB");
     
     // color
-    glEnableVertexAttribArray(color);
-    glVertexAttribPointer(color, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0);
-    glVertexAttribDivisor(color, 1);
+    glEnableVertexAttribArray(colorA);
+    glVertexAttribPointer(colorA, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0);
+    glVertexAttribDivisor(colorA, 1);
 
-    // glEnableVertexAttribArray(color);
-    // glVertexAttribPointer(color, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0);
-    // glVertexAttribDivisor(color, 1);
+    glEnableVertexAttribArray(colorB);
+    glVertexAttribPointer(colorB, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(vec4));
+    glVertexAttribDivisor(colorB, 1);
 
     // model column 0
+    int32 modelOffset = sizeof(vec4) + sizeof(vec4);
     glEnableVertexAttribArray(model);
-    glVertexAttribPointer(model, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(vec4));
+    glVertexAttribPointer(model, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + modelOffset);
     glVertexAttribDivisor(model, 1);
 
     // model column 1
     glEnableVertexAttribArray(model + 1);
-    glVertexAttribPointer(model + 1, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(vec4) * 2);
+    glVertexAttribPointer(model + 1, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + modelOffset + (sizeof(vec4) * 1));
     glVertexAttribDivisor(model + 1, 1);
 
     // model column 2
     glEnableVertexAttribArray(model + 2);
-    glVertexAttribPointer(model + 2, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(vec4) * 3);
+    glVertexAttribPointer(model + 2, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + modelOffset + (sizeof(vec4) * 2));
     glVertexAttribDivisor(model + 2, 1);
 
     // model column 3
     glEnableVertexAttribArray(model + 3);
-    glVertexAttribPointer(model + 3, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(vec4) * 4);
+    glVertexAttribPointer(model + 3, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + modelOffset + (sizeof(vec4) * 3));
     glVertexAttribDivisor(model + 3, 1);
 
     glDrawElementsInstancedBaseInstance(GL_TRIANGLES,
@@ -699,14 +701,16 @@ void RenderTexturedTileBuffer(TexturedTileBuffer *buffer, int32 startIndex, int3
                             startIndex);
     
     glDisableVertexAttribArray(vert);
-    glDisableVertexAttribArray(color);
+    glDisableVertexAttribArray(colorA);
+    glDisableVertexAttribArray(colorB);
     glDisableVertexAttribArray(model);
     glDisableVertexAttribArray(model + 1);
     glDisableVertexAttribArray(model + 2);
     glDisableVertexAttribArray(model + 3);
     
     glVertexAttribDivisor(vert, 0);
-    glVertexAttribDivisor(color, 0);
+    glVertexAttribDivisor(colorA, 0);
+    glVertexAttribDivisor(colorB, 0);
     glVertexAttribDivisor(model, 0);
     glVertexAttribDivisor(model + 1, 0);
     glVertexAttribDivisor(model + 2, 0);

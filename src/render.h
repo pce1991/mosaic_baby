@@ -57,7 +57,8 @@ struct RectBuffer {
 };
 
 struct TexturedTileRenderData {
-    vec4 color;
+    vec4 colorA;
+    vec4 colorB;
     mat4 model;
 };
 

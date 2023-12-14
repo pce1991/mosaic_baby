@@ -8,6 +8,7 @@ struct MTile {
     real32 rotation;
 
     vec4 color;
+    vec4 colorB;
     Sprite *sprite;
 
     int32 depth; // 0 is rendered first, then 1, etc
@@ -88,6 +89,8 @@ void SetTileColor(vec2 position, vec4 color);
 
 void SetTileColor(vec2i position, real32 r, real32 g, real32 b);
 void SetTileColor(vec2i position, vec4 color);
+
+void SetTileColorB(vec2 pos, vec4 color);
 
 void SetTileScale(vec2 position, real32 scale);
 void SetTileRotation(vec2 position, real32 rot);
