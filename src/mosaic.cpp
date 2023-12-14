@@ -125,6 +125,8 @@ void MyInit() {
     Mosaic->screenColor = RGB(0.2f, 0.2f, 0.2f);
     Mosaic->gridColor = RGB(0.8f, 0.8f, 0.8f);
 
+    AllocateTexturedTileBuffer(&Mosaic->tileRenderBuffer, 255 * 255);
+
     MyMosaicInit();
 }
 
@@ -187,8 +189,6 @@ void SetMosaicGridSize(uint32 newWidth, uint32 newHeight) {
     Mosaic->gridSize.y = Mosaic->tileSize * Mosaic->gridHeight;
     
     Mosaic->gridOrigin = V2(0) + V2(-Mosaic->gridSize.x * 0.5f, Mosaic->gridSize.y * 0.5f);
-
-    //AllocateRectBuffer(Mosaic->gridWidth * Mosaic->gridHeight, &Mosaic->rectBuffer);
 
     MTile*tiles = Mosaic->tiles;
     for (int y = 0; y < Mosaic->gridHeight; y++) {
@@ -801,6 +801,9 @@ void MosaicRender() {
     Quicksort(sortedTiles, sizeof(MTile), Mosaic->tileCapacity, (SortComparator)&MTile_Comparator);
 
 #if 1
+    TexturedTileBuffer *buffer = &Mosaic->tileRenderBuffer;
+    buffer->count = 0;
+    
     DynamicArray<DrawTileCommand> commands = MakeDynamicArray<DrawTileCommand>(&Game->frameMem, 64);
 
     DrawTileCommand *command = PushBackPtr(&commands);
@@ -809,6 +812,21 @@ void MosaicRender() {
 
     for (int i = 0; i < Mosaic->tileCapacity; i++) {
         MTile* tile = &sortedTiles[i];
+
+        // @BUG: why are the ones on top of grid drawn on top of the others?
+        {
+            vec2 worldPos = GridPositionToWorldPosition(tile->position);
+
+            TexturedTileRenderData data = {};
+            real32 scale = (Mosaic->tileSize * 0.5) * tile->scale;
+            
+            data.color = tile->color;
+            data.model = TRS(V3(worldPos, 0),
+                             AxisAngle(V3(0, 0, 1), tile->rotation),
+                             V3(scale, scale, 0.0f));
+
+            buffer->data[buffer->count++] = data;            
+        }
 
         if (tile->depth > command->depth) {
             command = PushBackPtr(&commands);
@@ -831,14 +849,20 @@ void MosaicRender() {
     }
 
     // @TODO: actually instance these
+
     for (int i = 0; i < commands.count; i++) {
         DrawTileCommand *command = &commands[i];
 
+        if (command->sprite == NULL) { continue; }
+
+#if 0 // non-instanced
         For (j, command->count) {
-            MTile* tile = &sortedTiles[command->startIndex + j];
-                    
+            //MTile* tile = &sortedTiles[command->startIndex + j];
             DrawTile(tile);
         }
+#else 
+        RenderTexturedTileBuffer(&Mosaic->tileRenderBuffer, command->startIndex, command->count, command->sprite);
+#endif
     }
 #else
     

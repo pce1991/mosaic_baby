@@ -298,6 +298,15 @@ void GameInit(GameMemory *gameMem) {
     }
 
     {
+        LoadShader("shaders/tile_textured_instanced.vert", "shaders/tile_textured_instanced.frag", &gameMem->texturedTileShader);
+        const char *uniforms[] = {
+            "viewProjection",
+            "texture0",
+        };
+        CompileShader(&gameMem->texturedTileShader, 2, uniforms);
+    }
+
+    {
         LoadShader("shaders/text.vert", "shaders/text.frag", &gameMem->textShader);
         const char *uniforms[] = {
                                   "model",

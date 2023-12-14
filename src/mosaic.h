@@ -41,6 +41,8 @@ struct MosaicMem {
     real32 padding;
 
     RectBuffer rectBuffer;
+
+    TexturedTileBuffer tileRenderBuffer;
     
     vec4 screenColor;
     vec4 gridColor;

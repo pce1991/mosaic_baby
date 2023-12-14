@@ -1,4 +1,4 @@
-
+struct Sprite;
 
 enum ShaderType {
                  ShaderType_Vertex,
@@ -56,6 +56,19 @@ struct RectBuffer {
     uint32 bufferSize;
 };
 
+struct TexturedTileRenderData {
+    vec4 color;
+    mat4 model;
+};
+
+struct TexturedTileBuffer {
+    int32 count;
+    int32 capacity;
+    TexturedTileRenderData *data;
+
+    uint32 bufferID;
+    uint32 bufferSize;
+};
 
 Color MultColor(Color c, real32 n) {
     c.r *= n;
