@@ -1,10 +1,16 @@
 
-struct MTile{
+struct MTile {
     // This is kinda redundant because the tile can't move, but it's easier to have a tile
     // and know where it is than pass it's position around. 
     vec2i position;
+
+    real32 scale;
+    real32 rotation;
+
     vec4 color;
     Sprite *sprite;
+
+    int32 depth; // 0 is rendered first, then 1, etc
 };
 
 struct MosaicText {
@@ -12,6 +18,14 @@ struct MosaicText {
 
     real32 size;
     vec4 color;
+};
+
+struct DrawTileCommand {
+    int32 depth;
+    // @TODO: organize by sprite also
+    
+    // Rendering order is that we'll do all the sprites at depth N, then all at depth N + 1, etc
+    DynamicArray<MTile> tiles;
 };
 
 struct MosaicMem {
@@ -37,9 +51,11 @@ struct MosaicMem {
 
     uint32 tileCapacity;
     MTile*tiles;
+
+    DynamicArray<DrawTileCommand> drawTileCommands;
     
-    MTile*hoveredTile;
-    MTile*hoveredTilePrev;
+    MTile *hoveredTile;
+    MTile *hoveredTilePrev;
     
     MosaicText text;
 
@@ -67,6 +83,14 @@ void SetTileColor(vec2 position, vec4 color);
 
 void SetTileColor(vec2i position, real32 r, real32 g, real32 b);
 void SetTileColor(vec2i position, vec4 color);
+
+void SetTileScale(vec2 position, real32 scale);
+void SetTileRotation(vec2 position, real32 rot);
+
+void SetTileSprite(vec2 position, Sprite *sprite);
+void SetTileSprite(vec2 position, int32 index);
+
+void SetTileDepth(vec2 position, int32 depth);
 
 void SetBlockColor(int32 x, int32 y, int32 width, int32 height, vec4 color);
 void SetBlockColor(vec2 pos, int32 width, int32 height, vec4 color);

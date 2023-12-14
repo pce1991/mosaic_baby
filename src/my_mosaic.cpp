@@ -3,7 +3,8 @@
 
 #define STAINED_GLASS 1
 #define PAINT_1 0
-#define PAINT_2 1
+#define PAINT_2 0
+#define PAINT_3 1
 
 enum GameState {
                 GameState_Init,
@@ -21,6 +22,7 @@ struct GameData {
 
 #define FOREACH_GAME(OP, ...)                   \
     OP(EmptyGame, __VA_ARGS__)                  \
+    OP(ChristmasLights, __VA_ARGS__)                  \
     OP(MowTheLawnSimple, __VA_ARGS__)                 \
     OP(MowTheLawn, __VA_ARGS__)                 \
     OP(ChaseColor, __VA_ARGS__)                 \
@@ -131,6 +133,7 @@ vec2 TilePositionToPixel(int32 x, int32 y) {
 #include "games/chase_color.cpp"
 #include "games/herd_color.cpp"
 #include "games/mow_the_lawn.cpp"
+#include "games/christmas_lights.cpp"
 
 
 struct EmptyGameData {};
@@ -165,19 +168,24 @@ void MDrawSprite(vec2 pos, Sprite *sprite) {
     vec4 color = {};
     
     vec4 *colorBuffer = (vec4*)sprite->data;
-                
+
+    vec2 cursor = pos;
     for (int y = 0; y < sprite->height; y++) {
         for (int x = 0; x < sprite->width; x++) {
             color = colorBuffer[index++];
+            cursor = V2(pos.x + x, pos.y + y);
             
             if (color.a == 0) {
                 continue;
             }
             
-            SetTileColor(pos.x + x, pos.y + y, color);
+            SetTileColor(cursor, color);
+            SetTileDepth(cursor, 1);
+            SetTileSprite(cursor, 0);
         }
     }
 }
+
 
 void AllocateSprite(MemoryArena *arena, Sprite *sprite, int32 width, int32 height) {
     sprite->width = width;
@@ -265,6 +273,12 @@ void MyMosaicInit() {
             Sprite *s = PushBackPtr(&GM.bokehMasks);
             LoadSprite(s, "data/bokeh/bokeh_paint2.png");
         }
+
+        {
+            Sprite *s = PushBackPtr(&GM.bokehMasks);
+            LoadSprite(s, "data/bokeh/waves.png");
+        }
+        
 #elif PAINT_1
         {
             Sprite *s = PushBackPtr(&GM.bokehMasks);

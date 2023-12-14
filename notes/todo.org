@@ -10,3 +10,7 @@ for coverage on cells we could draw a big tile which covers the whole area
 @TODO: pass in an A and B color and lerp between them instead of always scaling to black
 
 @TODO: I actually really like the overlapping tiles thing, but I think I want to choose what a depth order so there's more control
+
+@TODO: SetTileSprite which takes an integer I think 
+@TODO: instead of LoadSprite we can have an internal AddSprite or something which adds to a pool and we use the SetTileSprite(pos, index) to draw from this pool
+@TODO: would be nice to use a hashtable too tho

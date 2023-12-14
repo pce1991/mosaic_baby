@@ -195,6 +195,8 @@ void SetMosaicGridSize(uint32 newWidth, uint32 newHeight) {
         for (int x = 0; x < Mosaic->gridWidth; x++) {
             MTile*tile = GetTile(x, y);
             tile->position = V2i(x, y);
+            tile->rotation = 0;
+            tile->scale = 1;
         }
     }
 }
@@ -297,6 +299,7 @@ void DrawTile(vec2i position, vec4 color) {
     rot = noise * _PI;
 #endif
 
+    
     DrawMaskedQuad(worldPos + posOffset,
                    V2(scaledSize + scaleOffset),
                    // @TODO: allow a lil bit of overlap
@@ -306,6 +309,46 @@ void DrawTile(vec2i position, vec4 color) {
                    color,
                    &GM.bokehMasks[bokehIndex]);
 #endif
+}
+
+void DrawTile(MTile *tile) {
+    vec2 worldPos = GridPositionToWorldPosition(tile->position);
+    vec2 posOffset = V2(0);
+
+    if (tile->sprite == NULL) {
+        DrawRect(&Game->rectBuffer, worldPos, V2(Mosaic->tileSize * 0.5f), tile->color);
+    }
+    else {
+        DrawMaskedQuad(worldPos + posOffset,
+                       V2((Mosaic->tileSize * 0.5) * tile->scale),
+                       tile->rotation,
+                       tile->color,
+                       tile->sprite);
+    }
+}
+
+// @TODO: also look at the sprite when sorting. 
+int32 MTile_Comparator(MTile const *a, MTile const *b) {
+    if (a->depth < b->depth) {
+        return -1;
+    }
+    else if (a->depth > b->depth) {
+        return 1;
+    }
+    else {
+        // they have equal depth and so we use position
+        int32 indexA = a->position.x + (a->position.y * Mosaic->gridWidth);
+        int32 indexB = b->position.x + (b->position.y * Mosaic->gridWidth);
+
+        if (indexA < indexB) {
+            return -1;
+        }
+        if (indexA > indexB) {
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
 void DrawBorder() {
@@ -507,6 +550,41 @@ inline void SetTileColor(vec2 position, vec4 color) {
     }
 }
 
+inline void SetTileScale(vec2 position, real32 scale) {
+    MTile*t = GetTile(position);
+    if (t) {
+        t->scale = scale;
+    }
+}
+
+inline void SetTileRotation(vec2 position, real32 rotation) {
+    MTile*t = GetTile(position);
+    if (t) {
+        t->rotation = rotation;
+    }
+}
+
+inline void SetTileSprite(vec2 position, Sprite *sprite) {
+    MTile*t = GetTile(position);
+    if (t) {
+        t->sprite = sprite;
+    }
+}
+
+inline void SetTileSprite(vec2 position, int32 index) {
+    MTile*t = GetTile(position);
+    if (t) {
+        t->sprite = &GM.bokehMasks[index];
+    }
+}
+
+inline void SetTileDepth(vec2 position, int32 depth) {
+    MTile*t = GetTile(position);
+    if (t) {
+        t->depth = depth;
+    }
+}
+
 inline void DrawSprite(vec2 position, Sprite *sprite) {
     for (int y = 0; y < sprite->height; y++) {
         for (int x = 0; x < sprite->width; x++) {
@@ -699,11 +777,31 @@ void MosaicRender() {
                    &GM.bokehMasks[0]);
 #endif
 
+    MTile *sortedTiles = PushArray(&Game->frameMem, MTile, Mosaic->tileCapacity);
+
+    for (int i = 0; i < Mosaic->tileCapacity; i++) {
+        sortedTiles[i] = tiles[i];
+    }
+
+    Quicksort(sortedTiles, sizeof(MTile), Mosaic->tileCapacity, (SortComparator)&MTile_Comparator);
+
+    for (int i = 0; i < Mosaic->tileCapacity; i++) {
+        MTile* tile = &sortedTiles[i];
+
+        DrawTile(tile);
+    }
+
+#if 0
     for (int i = 0; i < Mosaic->tileCapacity; i++) {
         MTile*tile = &tiles[i];
 
+#if PAINT_3
+        DrawTile(tile);
+#else
         DrawTile(tile->position, tile->color);
+#endif
     }
+#endif
 
     if (Mosaic->drawGrid) {
         DrawGrid();        
