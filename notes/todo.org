@@ -1,4 +1,7 @@
 
+@BUG: we blow out the stack when sorting a big grid like in MowTheLawn
+- don't be recursive
+
 Rendering:
 Want masks for the tiles
 Want instanced sprite rendering I think as a core mosaic feature

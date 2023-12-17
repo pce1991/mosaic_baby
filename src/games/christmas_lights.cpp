@@ -64,8 +64,8 @@ void ChristmasLightsUpdate() {
         }
     }
 
-    For (y, Mosaic->gridWidth) {
-        For (x, Mosaic->gridHeight) {
+    For (y, Mosaic->gridHeight) {
+        For (x, Mosaic->gridWidth) {
             real32 signedNoise = Sum1f(&Perlin1f, ((Time * 2.0 + ((x + y * 19) * 0.5f)) * 0.2f), 1.0f, 1.0f);
             real32 normNoise = (1 + signedNoise) * 0.5f;
             
