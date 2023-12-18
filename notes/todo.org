@@ -1,4 +1,7 @@
 
+@BUG: we blow out the stack when sorting a big grid like in MowTheLawn
+- don't be recursive
+
 Rendering:
 Want masks for the tiles
 Want instanced sprite rendering I think as a core mosaic feature
@@ -14,3 +17,6 @@ for coverage on cells we could draw a big tile which covers the whole area
 @TODO: SetTileSprite which takes an integer I think 
 @TODO: instead of LoadSprite we can have an internal AddSprite or something which adds to a pool and we use the SetTileSprite(pos, index) to draw from this pool
 @TODO: would be nice to use a hashtable too tho
+
+@TODO: get a regular square mask and use that for the default rendering
+- this definitely kills simplicity a bit...

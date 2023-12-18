@@ -95,6 +95,8 @@ struct GameMemory {
     Shader texturedQuadShader;
     Shader maskedQuadShader;
 
+    Shader texturedTileShader;
+
     Shader instancedQuadShader;
     
     Shader shader;

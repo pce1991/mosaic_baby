@@ -88,7 +88,7 @@ struct GameMem {
 
 GameMem GM = {};
 
-void MDrawSprite(vec2 pos, Sprite *sprite);
+void MDrawSprite(vec2 pos, Sprite *sprite, int32 depth = 0);
 void MDrawCollider_AABB(vec2 position, vec2 min, vec2 max, vec4 color);
 void MDrawCollider_Rect(vec2 position, Rect rect, vec4 color);
 
@@ -163,7 +163,7 @@ GameUpdateFunc *UpdateFuncTable[] = {
 
 
 
-void MDrawSprite(vec2 pos, Sprite *sprite) {
+void MDrawSprite(vec2 pos, Sprite *sprite, int32 depth) {
     int32 index = 0;
     vec4 color = {};
     
@@ -180,7 +180,7 @@ void MDrawSprite(vec2 pos, Sprite *sprite) {
             }
             
             SetTileColor(cursor, color);
-            SetTileDepth(cursor, 1);
+            SetTileDepth(cursor, depth);
             SetTileSprite(cursor, 0);
         }
     }
@@ -250,6 +250,8 @@ void SetActiveGame(GameID gameID) {
     
     GM.gameData->init = InitFuncTable[gameID];
     GM.gameData->update = UpdateFuncTable[gameID];
+
+    GM.gameState = GameState_Init;
 }
 
 void MyMosaicInit() {
@@ -271,12 +273,7 @@ void MyMosaicInit() {
 
         {
             Sprite *s = PushBackPtr(&GM.bokehMasks);
-            LoadSprite(s, "data/bokeh/bokeh_paint2.png");
-        }
-
-        {
-            Sprite *s = PushBackPtr(&GM.bokehMasks);
-            LoadSprite(s, "data/bokeh/waves.png");
+            LoadSprite(s, "data/bokeh/waves_alpha.png");
         }
         
 #elif PAINT_1

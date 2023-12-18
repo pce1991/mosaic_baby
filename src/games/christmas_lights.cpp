@@ -64,8 +64,8 @@ void ChristmasLightsUpdate() {
         }
     }
 
-    For (y, Mosaic->gridWidth) {
-        For (x, Mosaic->gridHeight) {
+    For (y, Mosaic->gridHeight) {
+        For (x, Mosaic->gridWidth) {
             real32 signedNoise = Sum1f(&Perlin1f, ((Time * 2.0 + ((x + y * 19) * 0.5f)) * 0.2f), 1.0f, 1.0f);
             real32 normNoise = (1 + signedNoise) * 0.5f;
             
@@ -77,10 +77,15 @@ void ChristmasLightsUpdate() {
             // vec4 colorA = V4(0.1f, 0.1f, 0.1f, 1.0f);
             // vec4 colorB = V4(0.05f, 0.05f, 0.05f, 1.0f);
 
-            SetTileColor(pos, Lerp(colorA, colorB, normNoise));
+            vec4 color = Lerp(colorA, colorB, normNoise);
+            SetTileColor(pos, WithAlpha(color, 0.5f));
+            //SetTileColorB(pos, WithAlpha(color * 0.2f, 1.0f));
+            SetTileColorB(pos, V4(0));
+            
             SetTileRotation(pos, (x + (y * 19)) * _PI * 0.08f);
-            SetTileScale(pos, 2.0f + (normNoise * 0.9f));
-            SetTileSprite(pos, 2);
+            SetTileScale(pos, 2.0 + (normNoise * 0.9f));
+            //SetTileScale(pos, 1.0f);
+            SetTileSprite(pos, 1);
             SetTileDepth(pos, 0);
 
             // @BUG: whenever we set tile data we want to specify a depth otherwise it's
@@ -88,13 +93,12 @@ void ChristmasLightsUpdate() {
         }
     }
 
-    // For (i, Data->dots.count) {
-    //     CLDot *dot = &Data->dots[i];
+    For (i, Data->dots.count) {
+        CLDot *dot = &Data->dots[i];
 
-    //     MDrawSprite(dot->position, &Data->dotSprite);
-    //     break;
-    // }
+        //MDrawSprite(dot->position, &Data->dotSprite);
+    }
 
     // @TODO: pass in parameters along with the sprite for scale/rot/sprite/depth
-    MDrawSprite(V2(20, 15), &Data->dotSprite);
+    MDrawSprite(V2(12, 12), &Data->dotSprite);
 }

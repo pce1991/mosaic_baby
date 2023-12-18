@@ -368,7 +368,22 @@ void MowTheLawnSimpleUpdate() {
 
     MTGMowerSimple_Update(Data, &Data->mower);
 
-    // @TODO: check for collision with grass
+
+    // idea is to set some roation for everything rather than having to do it per MDrawSprite
+    For (y, Mosaic->gridHeight) {
+        For (x, Mosaic->gridWidth) {
+            real32 signedNoise = Sum1f(&Perlin1f, ((Time * 2.0 + ((x + y * 19) * 0.5f)) * 0.2f), 1.0f, 1.0f);
+            real32 normNoise = (1 + signedNoise) * 0.5f;
+            
+            vec2 pos = V2(x, y);
+
+            SetTileColorB(pos, V4(0, 0, 0, 1));
+            
+            SetTileRotation(pos, (x + (y * 10)) * _PI * 0.08f);
+            SetTileScale(pos, 1.5 + (normNoise * 0.5f));
+            SetTileDepth(pos, 0);
+        }
+    }
 
     For (i, Data->grass.count) {
         MTGGrass *grass = &Data->grass[i];
@@ -378,11 +393,11 @@ void MowTheLawnSimpleUpdate() {
             sprite = &Data->cutGrassSprites[0];
         }
         
-        MDrawSprite(grass->position, sprite);
+        MDrawSprite(grass->position, sprite, 1);
     }
 
     MTGMower *mower = &Data->mower;
     
-    MDrawSprite(mower->position, &Data->mowerSprites[mower->facingDir]);
+    MDrawSprite(mower->position, &Data->mowerSprites[mower->facingDir], 2);
     //MDrawCollider_Rect(mower->position, mower->rect, WHITE);;
 }

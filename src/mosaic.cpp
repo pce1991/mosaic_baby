@@ -125,6 +125,8 @@ void MyInit() {
     Mosaic->screenColor = RGB(0.2f, 0.2f, 0.2f);
     Mosaic->gridColor = RGB(0.8f, 0.8f, 0.8f);
 
+    AllocateTexturedTileBuffer(&Mosaic->tileRenderBuffer, 255 * 255);
+
     MyMosaicInit();
 }
 
@@ -187,8 +189,6 @@ void SetMosaicGridSize(uint32 newWidth, uint32 newHeight) {
     Mosaic->gridSize.y = Mosaic->tileSize * Mosaic->gridHeight;
     
     Mosaic->gridOrigin = V2(0) + V2(-Mosaic->gridSize.x * 0.5f, Mosaic->gridSize.y * 0.5f);
-
-    //AllocateRectBuffer(Mosaic->gridWidth * Mosaic->gridHeight, &Mosaic->rectBuffer);
 
     MTile*tiles = Mosaic->tiles;
     for (int y = 0; y < Mosaic->gridHeight; y++) {
@@ -336,6 +336,21 @@ int32 MTile_Comparator(MTile const *a, MTile const *b) {
         return 1;
     }
     else {
+        // @TODO: we need to know the start of a range for a given sprite
+        // So first we need to know how many sprites there are
+        // but also how many different depths those sprites are rendered at
+        // Then I think we just walk the sorted list and every time our depth or
+        // our sprite changes we start a new batch.
+
+        // @NOTE: if they are using different sprites we cant defer to their position because
+        // that would create more batches, so we sort by the sprite pointer
+        if (a->sprite < b->sprite) {
+            return -1;
+        }
+        else if (a->sprite > b->sprite) {
+            return 1;
+        }
+        
         // they have equal depth and so we use position
         int32 indexA = a->position.x + (a->position.y * Mosaic->gridWidth);
         int32 indexB = b->position.x + (b->position.y * Mosaic->gridWidth);
@@ -547,6 +562,13 @@ inline void SetTileColor(vec2 position, vec4 color) {
     MTile*t = GetTile(position);
     if (t) {
         t->color = color;
+    }
+}
+
+inline void SetTileColorB(vec2 position, vec4 color) {
+    MTile*t = GetTile(position);
+    if (t) {
+        t->colorB = color;
     }
 }
 
@@ -785,11 +807,79 @@ void MosaicRender() {
 
     QuicksortIterative(sortedTiles, sizeof(MTile), Mosaic->tileCapacity, (SortComparator)&MTile_Comparator, &Game->frameMem);
 
+#if 1
+    TexturedTileBuffer *buffer = &Mosaic->tileRenderBuffer;
+    buffer->count = 0;
+    
+    DynamicArray<DrawTileCommand> commands = MakeDynamicArray<DrawTileCommand>(&Game->frameMem, 64);
+
+    DrawTileCommand *command = PushBackPtr(&commands);
+    command->depth = sortedTiles[0].depth;
+    command->sprite = sortedTiles[0].sprite;
+
+    for (int i = 0; i < Mosaic->tileCapacity; i++) {
+        MTile* tile = &sortedTiles[i];
+
+        // @BUG: why are the ones on top of grid drawn on top of the others?
+        {
+            vec2 worldPos = GridPositionToWorldPosition(tile->position);
+
+            TexturedTileRenderData data = {};
+            real32 scale = (Mosaic->tileSize * 0.5) * tile->scale;
+            
+            data.colorA = tile->color;
+            data.colorB = tile->colorB;
+            data.model = TRS(V3(worldPos, 0),
+                             AxisAngle(V3(0, 0, 1), tile->rotation),
+                             V3(scale, scale, 0.0f));
+
+            buffer->data[buffer->count++] = data;            
+        }
+
+        if (tile->depth > command->depth) {
+            command = PushBackPtr(&commands);
+
+            *command = {};
+            command->depth = tile->depth;
+            command->sprite = tile->sprite;
+            command->startIndex = i;
+        }
+        else if (tile->sprite > command->sprite) {
+            command = PushBackPtr(&commands);
+            
+            *command = {};
+            command->depth = tile->depth;
+            command->sprite = tile->sprite;
+            command->startIndex = i;
+        }
+
+        command->count++;
+    }
+
+    // @TODO: actually instance these
+
+    for (int i = 0; i < commands.count; i++) {
+        DrawTileCommand *command = &commands[i];
+
+        if (command->sprite == NULL) { continue; }
+
+#if 0 // non-instanced
+        For (j, command->count) {
+            //MTile* tile = &sortedTiles[command->startIndex + j];
+            DrawTile(tile);
+        }
+#else 
+        RenderTexturedTileBuffer(&Mosaic->tileRenderBuffer, command->startIndex, command->count, command->sprite);
+#endif
+    }
+#else
+    
     for (int i = 0; i < Mosaic->tileCapacity; i++) {
         MTile* tile = &sortedTiles[i];
 
         DrawTile(tile);
     }
+#endif
 
 #if 0
     for (int i = 0; i < Mosaic->tileCapacity; i++) {
