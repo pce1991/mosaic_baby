@@ -8,9 +8,10 @@
 #include "types.h"
 
 #include "commonlib.h"
-#include "sorts.h"
 
 #include "my_memory.h"
+
+#include "sorts.h"
 
 #include "hashtable.h"
 #include "dynamic_array.h"

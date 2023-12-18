@@ -98,20 +98,19 @@ void Quicksort(void *array, size_t const elemSize, int32 const count, SortCompar
     Quicksort_(array, elemSize, 0, count - 1, comparator);
 }
 
-
-int32 QuicksortPartition_(void *array, size_t const elemSize, int32 const low, int32 const high, SortComparatorData comparator, void const *data) {
-    void *pivot = alloca(elemSize);
+int32 QuicksortPartition_(void *array, size_t const elemSize, const int32 low, int32 const high, SortComparator comparator, MemoryArena *arena) {
+    void *pivot = PushSize(arena, elemSize);
     memcpy(pivot, (uint8 *)array + (elemSize * low), elemSize);
 
     int32 i = low;
     int32 j = high;
 
     while (true) {
-        while (comparator((uint8 *)array + (elemSize * i),  pivot, data) < 0) {
+        while (comparator((uint8 *)array + (elemSize * i),  pivot) < 0) {
             i++;
         }
 
-        while (comparator((uint8 *)array + (elemSize * j), pivot, data) > 0) {
+        while (comparator((uint8 *)array + (elemSize * j), pivot) > 0) {
             j--;            
         }
 
@@ -123,8 +122,11 @@ int32 QuicksortPartition_(void *array, size_t const elemSize, int32 const low, i
             void *temp = alloca(elemSize);
             memcpy(temp, (uint8 *)array + (elemSize * i), elemSize);
             memcpy((uint8 *)array + (elemSize * i),
-                    (uint8 *)array + (elemSize * j), elemSize);
-            memcpy((uint8 *)array + (elemSize * j), temp, elemSize);
+                    (uint8 *)array + (elemSize * j),
+                    elemSize);
+            memcpy((uint8 *)array + (elemSize * j),
+                    temp,
+                    elemSize);
         }
 
         i++;
@@ -132,15 +134,51 @@ int32 QuicksortPartition_(void *array, size_t const elemSize, int32 const low, i
     }
 }
 
-void Quicksort_(void *array, size_t const elemSize, int32 const low, int32 const high, SortComparatorData comparator, void const *data) {
-    if (low >= high) {
-        return;
-    }
-    int32 mid = QuicksortPartition_(array, elemSize, low, high, comparator, data);
-    Quicksort_(array, elemSize, low, mid, comparator, data);
-    Quicksort_(array, elemSize, mid + 1, high, comparator, data);
-}
+// iterative version
+void QuicksortIterative(void *array, size_t const elemSize, int32 const count, SortComparator comparator, MemoryArena *arena) {
+    int32 low = 0;
+    int32 high = count;
 
-void Quicksort(void *array, size_t const elemSize, int32 const count, SortComparatorData comparator, void const *data) {
-    Quicksort_(array, elemSize, 0, count - 1, comparator, data);
+    void *stack = PushSize(arena, elemSize * (high - low + 1));
+
+    int32 top = -1;
+
+    top++;
+    void *lowElem = ((u8*)array) + elemSize * low;
+    memcpy(stack, lowElem, elemSize);
+
+    top++;
+    void *highElem = ((u8*)array) + elemSize * high;
+    memcpy(stack, highElem, elemSize);
+
+    int32 pivot = 0;
+    while (top >= 0) {
+        
+        lowElem = ((u8*)array) + elemSize * top;
+        top--;
+
+        highElem = ((u8*)array) + elemSize * top;
+        top--;
+        
+        pivot = QuicksortPartition_(array, elemSize, low, high, comparator, arena);
+        void *pivotPrevElem = ((u8*)array + ((pivot - 1) * elemSize));
+        void *pivotNextElem = ((u8*)array + ((pivot + 1) * elemSize));
+
+        
+        if (pivotPrevElem > lowElem) {
+            top++;
+            memcpy(((u8 *)stack + top), lowElem, elemSize);
+
+            top++;
+            memcpy(((u8 *)stack + top), pivotPrevElem, elemSize);
+        } 
+
+        if (pivotNextElem < highElem) {
+            top++;
+            memcpy(((u8 *)stack + top), pivotNextElem, elemSize);
+
+            top++;
+            memcpy(((u8 *)stack + top), highElem, elemSize);
+        }
+    }
 }

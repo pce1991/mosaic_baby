@@ -783,7 +783,7 @@ void MosaicRender() {
         sortedTiles[i] = tiles[i];
     }
 
-    Quicksort(sortedTiles, sizeof(MTile), Mosaic->tileCapacity, (SortComparator)&MTile_Comparator);
+    QuicksortIterative(sortedTiles, sizeof(MTile), Mosaic->tileCapacity, (SortComparator)&MTile_Comparator, &Game->frameMem);
 
     for (int i = 0; i < Mosaic->tileCapacity; i++) {
         MTile* tile = &sortedTiles[i];

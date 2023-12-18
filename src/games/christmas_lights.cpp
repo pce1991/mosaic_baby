@@ -15,8 +15,8 @@ void ChristmasLightsInit() {
     TileWidth = 8;
     TileHeight = 8;
 
-    GridWidth = 6;
-    GridHeight = 6;
+    GridWidth = 4;
+    GridHeight = 4;
 
     SetMosaicGridSize(TileWidth * GridWidth,
                       TileHeight * GridHeight);
@@ -71,8 +71,8 @@ void ChristmasLightsUpdate() {
             
             vec2 pos = V2(x, y);
 
-            vec4 colorA = V4(0.1f, 0.3f, 0.7f, 1.0f);
-            vec4 colorB = V4(0.1f, 0.4f, 0.5f, 1.0f);
+            vec4 colorA = V4(0.1f, 0.3f, 0.7f, 0.3f);
+            vec4 colorB = V4(0.1f, 0.4f, 0.5f, 0.4f);
 
             // vec4 colorA = V4(0.1f, 0.1f, 0.1f, 1.0f);
             // vec4 colorB = V4(0.05f, 0.05f, 0.05f, 1.0f);
@@ -96,5 +96,5 @@ void ChristmasLightsUpdate() {
     // }
 
     // @TODO: pass in parameters along with the sprite for scale/rot/sprite/depth
-    MDrawSprite(V2(30, 20), &Data->dotSprite);
+    MDrawSprite(V2(20, 15), &Data->dotSprite);
 }
