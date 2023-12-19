@@ -22,6 +22,7 @@ struct GameData {
 
 #define FOREACH_GAME(OP, ...)                   \
     OP(EmptyGame, __VA_ARGS__)                  \
+    OP(PluraLuna, __VA_ARGS__)                 \
     OP(ChristmasLights, __VA_ARGS__)                  \
     OP(MowTheLawnSimple, __VA_ARGS__)                 \
     OP(MowTheLawn, __VA_ARGS__)                 \
@@ -134,6 +135,7 @@ vec2 TilePositionToPixel(int32 x, int32 y) {
 #include "games/herd_color.cpp"
 #include "games/mow_the_lawn.cpp"
 #include "games/christmas_lights.cpp"
+#include "games/plura_luna.cpp"
 
 
 struct EmptyGameData {};
