@@ -220,35 +220,35 @@ void MoonPeltInit(PLScene *scenePtr) {
 
     moon->moonDir = 1;
     
-    LoadSoundClip("data/sleepwalking.wav", &moon->backingClip);
+    LoadSoundClip("data/plura_luna/sleepwalking.wav", &moon->backingClip);
 
     moon->meteorSounds = MakeDynamicArray<SoundClip>(&GM.gameArena, 20);
-    LoadSoundClip("data/meteor_1.wav", PushBackPtr(&moon->meteorSounds));
-    LoadSoundClip("data/meteor_2.wav", PushBackPtr(&moon->meteorSounds));
-    LoadSoundClip("data/meteor_3.wav", PushBackPtr(&moon->meteorSounds));
-    LoadSoundClip("data/meteor_1.wav", PushBackPtr(&moon->meteorSounds));
-    LoadSoundClip("data/meteor_2.wav", PushBackPtr(&moon->meteorSounds));
-    LoadSoundClip("data/meteor_3.wav", PushBackPtr(&moon->meteorSounds));
-    LoadSoundClip("data/meteor_7.wav", PushBackPtr(&moon->meteorSounds));
-    LoadSoundClip("data/meteor_8.wav", PushBackPtr(&moon->meteorSounds));
-    LoadSoundClip("data/meteor_9.wav", PushBackPtr(&moon->meteorSounds));
-    LoadSoundClip("data/meteor_10.wav", PushBackPtr(&moon->meteorSounds));
-    LoadSoundClip("data/meteor_11.wav", PushBackPtr(&moon->meteorSounds));
-    LoadSoundClip("data/meteor_12.wav", PushBackPtr(&moon->meteorSounds));
-    LoadSoundClip("data/meteor_13.wav", PushBackPtr(&moon->meteorSounds));
-    LoadSoundClip("data/meteor_2.wav", PushBackPtr(&moon->meteorSounds));
-    LoadSoundClip("data/meteor_3.wav", PushBackPtr(&moon->meteorSounds));
-    LoadSoundClip("data/meteor_1.wav", PushBackPtr(&moon->meteorSounds));
-    LoadSoundClip("data/meteor_2.wav", PushBackPtr(&moon->meteorSounds));
-    LoadSoundClip("data/meteor_1.wav", PushBackPtr(&moon->meteorSounds));
-    LoadSoundClip("data/meteor_2.wav", PushBackPtr(&moon->meteorSounds));
-    LoadSoundClip("data/meteor_3.wav", PushBackPtr(&moon->meteorSounds));
+    LoadSoundClip("data/plura_luna/meteor_1.wav", PushBackPtr(&moon->meteorSounds));
+    LoadSoundClip("data/plura_luna/meteor_2.wav", PushBackPtr(&moon->meteorSounds));
+    LoadSoundClip("data/plura_luna/meteor_3.wav", PushBackPtr(&moon->meteorSounds));
+    LoadSoundClip("data/plura_luna/meteor_1.wav", PushBackPtr(&moon->meteorSounds));
+    LoadSoundClip("data/plura_luna/meteor_2.wav", PushBackPtr(&moon->meteorSounds));
+    LoadSoundClip("data/plura_luna/meteor_3.wav", PushBackPtr(&moon->meteorSounds));
+    LoadSoundClip("data/plura_luna/meteor_7.wav", PushBackPtr(&moon->meteorSounds));
+    LoadSoundClip("data/plura_luna/meteor_8.wav", PushBackPtr(&moon->meteorSounds));
+    LoadSoundClip("data/plura_luna/meteor_9.wav", PushBackPtr(&moon->meteorSounds));
+    LoadSoundClip("data/plura_luna/meteor_10.wav", PushBackPtr(&moon->meteorSounds));
+    LoadSoundClip("data/plura_luna/meteor_11.wav", PushBackPtr(&moon->meteorSounds));
+    LoadSoundClip("data/plura_luna/meteor_12.wav", PushBackPtr(&moon->meteorSounds));
+    LoadSoundClip("data/plura_luna/meteor_13.wav", PushBackPtr(&moon->meteorSounds));
+    LoadSoundClip("data/plura_luna/meteor_2.wav", PushBackPtr(&moon->meteorSounds));
+    LoadSoundClip("data/plura_luna/meteor_3.wav", PushBackPtr(&moon->meteorSounds));
+    LoadSoundClip("data/plura_luna/meteor_1.wav", PushBackPtr(&moon->meteorSounds));
+    LoadSoundClip("data/plura_luna/meteor_2.wav", PushBackPtr(&moon->meteorSounds));
+    LoadSoundClip("data/plura_luna/meteor_1.wav", PushBackPtr(&moon->meteorSounds));
+    LoadSoundClip("data/plura_luna/meteor_2.wav", PushBackPtr(&moon->meteorSounds));
+    LoadSoundClip("data/plura_luna/meteor_3.wav", PushBackPtr(&moon->meteorSounds));
 
     moon->craters = MakeDynamicArray<MoonCrater>(&GM.gameArena, 20);
-    
 
     moon->hoveredTileRadiusDir = 1;
-    moon->hoveredTileRadius = 0.1f;   
+    moon->hoveredTileRadius = 0.1f;
+
 }
 
 void MoonPeltUpdate(PLScene *scenePtr, void *sceneData) {
@@ -256,7 +256,7 @@ void MoonPeltUpdate(PLScene *scenePtr, void *sceneData) {
     MoonPelt *scene = (MoonPelt *)sceneData;
 
     if (scenePtr->firstFrame) {
-        PlaySound(&Game->audioPlayer, scene->backingClip, false);
+        PlaySound(&Game->audioPlayer, scene->backingClip, 1.0f);
     }
 
     vec2 moonPosPrev = scene->moonPos;
@@ -343,6 +343,8 @@ void MoonPeltUpdate(PLScene *scenePtr, void *sceneData) {
                 inMoon = true;
             }
 
+            bool skipSpawn = false;
+
             // Check if it hits the earth of the moon:
             if (inMoon) {
                 crater.offsetPos = Mosaic->hoveredTile->position - moonPosi;    
@@ -350,6 +352,9 @@ void MoonPeltUpdate(PLScene *scenePtr, void *sceneData) {
             else if (inEarth) {
                 crater.offsetPos = Mosaic->hoveredTile->position - earthPosi;
                 crater.hitEarth = true;
+            }
+            else {
+                skipSpawn = true;
             }
             
             crater.timeHit = Game->time;
@@ -363,20 +368,21 @@ void MoonPeltUpdate(PLScene *scenePtr, void *sceneData) {
             SoundClip *clip = NULL;
             clip = &scene->meteorSounds[scene->soundIndex];
             
-            PlaySound(&Game->audioPlayer, *clip, false);
+            PlaySound(&Game->audioPlayer, *clip, 1.0f);
 
-            PushBack(&scene->craters, crater);
+            if (!skipSpawn) {
+                PushBack(&scene->craters, crater);
+            }
         }
     }
 
     if (Time - scene->soundTime > 3.0f) {
-        
         scene->soundIndex++;
-                    Print("index is %d", scene->soundIndex);
+        Print("index is %d", scene->soundIndex);
         scene->soundTime = Game->time;
-          if (scene->soundIndex > 19) {
-              scene->soundIndex = 0;
-          }
+        if (scene->soundIndex > 19) {
+            scene->soundIndex = 0;
+        }
     }
 
     for (int i = 0; i < Mosaic->tileCapacity; i++) {
@@ -387,6 +393,8 @@ void MoonPeltUpdate(PLScene *scenePtr, void *sceneData) {
         MTile *tile = &Mosaic->tiles[i];
 
         tile->color = V4(0);
+        tile->colorB = V4(0);
+        //tile->colorB = V4(1, 1, 1, 1.0f) * normNoise;
 
         vec2 pos = V2(tile->position.x, tile->position.y);
 
@@ -417,7 +425,7 @@ void MoonPeltUpdate(PLScene *scenePtr, void *sceneData) {
 
             r32 distEarth = Distance(tile->position, earthPosi);
 
-            real32 signedNoise = Sum1f(&Perlin1f, ((Time + (index * 0.5f))) * 0.2f, 1.0f, 1.0f);
+            real32 signedNoise = Sum1f(&Perlin1f, (((Time * 0.2f) + (index * 0.5f))) * 0.2f, 1.0f, 1.0f);
             real32 normNoise = (1 + signedNoise) * 0.5f;
 
             bool inEarth = false;
@@ -426,14 +434,14 @@ void MoonPeltUpdate(PLScene *scenePtr, void *sceneData) {
                 tile->color.a = 0.6;
 
                 inEarth = true;
+                
+                tile->colorB = V4(1, 1, 1, 1.0f) * normNoise;
 
                 vec2 pos = V2(tile->position.x, tile->position.y);
 
+                SetTileSprite(pos, 1);
                 SetTileScale(pos, 2.0f);
-                //SetTileRotation(pos, Time + (index * 0.1f) + signedNoise);
-                //SetTileRotation(pos, sinf(((Time * 0.1f) + (index * 0.1)) * _PI) * _PI);
                 SetTileRotation(pos, normNoise * _PI);
-                    //;Time + (index * 0.1f) + signedNoise);
             }
 
             for (int i = 0; i < scene->craters.count; i++) {
@@ -487,6 +495,8 @@ void MoonPeltUpdate(PLScene *scenePtr, void *sceneData) {
             if (!(scene->moonDir < 0 && inEarth) && dist < moonRadius) {
                 tile->color = V4(1);
                 tile->depth = 2;
+                tile->colorB = V4(1, 1, 1, 1.0f) * normNoise;
+
                 inMoon = true;
 
                 SetTileRotation(pos, _PI * normNoise);
@@ -555,7 +565,8 @@ void MoonPeltUpdate(PLScene *scenePtr, void *sceneData) {
     }
 
     if (InputPressed(Keyboard, Input_UpArrow)) {
-        //PlaySound(&Game->audioPlayer, scene->soundClips[2], false);
+        SoundClip clip = scene->meteorSounds[scene->soundIndex];
+        PlaySound(&Game->audioPlayer, clip, false);
     }
 
     {
@@ -566,12 +577,20 @@ void MoonPeltUpdate(PLScene *scenePtr, void *sceneData) {
     }
 }
 
+void PLSetScene(PLSceneID id) {
+    Data = (PluraLunaData *)GM.gameData;
+    Data->currScene = id;
+
+    PLScene *scene = &Data->scenes[id];
+    scene->firstFrame = true;
+}
+
 void PluraLunaInit() {
     Data = (PluraLunaData *)GM.gameData;
 
     MoonPeltInit(&Data->scenes[PLSceneID_MoonPelt]);
 
-    Data->currScene = PLSceneID_MoonPelt;
+    PLSetScene(PLSceneID_MoonPelt);
 }
 
 void PluraLunaUpdate() {
@@ -585,4 +604,6 @@ void PluraLunaUpdate() {
         MoonPeltUpdate(scene, sceneData);
     } break;
     }
+
+    scene->firstFrame = false;
 }

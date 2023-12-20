@@ -1,6 +1,9 @@
 
-@BUG: we blow out the stack when sorting a big grid like in MowTheLawn
-- don't be recursive
+
+@BUG: no sound?? 
+@BUG: why are some of the background sprites not index 0?
+@BUG: why does the color not get reset after it's been hit? 
+@BUG: clicking on space spawns crater on center of moon
 
 Rendering:
 Want masks for the tiles
