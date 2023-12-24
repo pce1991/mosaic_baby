@@ -433,7 +433,7 @@ MTile*GetHoveredTile() {
     return &Mosaic->tiles[index];
 }
 
-inline MTile*GetTile(int32 x, int32 y) {
+inline MTile* GetTile(int32 x, int32 y) {
     if (x < 0 || x >= Mosaic->gridWidth) {
         return NULL;
     }
@@ -446,12 +446,47 @@ inline MTile*GetTile(int32 x, int32 y) {
     return &Mosaic->tiles[index];
 }
 
+inline int32 GetTileIndex(int32 x, int32 y) {
+    if (x < 0 || x >= Mosaic->gridWidth) {
+        return -1;
+    }
+    if (y < 0 || y >= Mosaic->gridHeight) {
+        return -1;
+    }
+    
+    int32 index = (y * Mosaic->gridWidth) + x;
+    return index;
+}
+
+inline int32 GetTileIndex(vec2 pos) {
+    return GetTileIndex(pos.x, pos.y);
+}
+
+inline int32 GetTileIndex(vec2i pos) {
+    return GetTileIndex(pos.x, pos.y);
+}
+
 inline MTile*GetTile(vec2i pos) {
     return GetTile(pos.x, pos.y);
 }
 
 inline MTile*GetTile(vec2 pos) {
     return GetTile(pos.x, pos.y);
+}
+
+void GetTileNeighbors(MTile *tile, MTile **neighbors) {
+    vec2i pos = tile->position;
+
+    int32 neighborCount = 0;
+    for (int y = -1; y <= 1; y++) {
+        for (int x = -1; x <= 1; x++) {
+            if (x == 0 && y == 0) { continue; }
+            
+            MTile *neighbor = GetTile(pos.x + x, pos.y + y);
+
+            neighbors[neighborCount++] = neighbor;
+        }
+    }
 }
 
     

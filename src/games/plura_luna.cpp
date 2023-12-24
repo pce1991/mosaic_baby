@@ -1,4 +1,21 @@
 
+
+enum PLTileState {
+     PLTileState_Default,
+     PLTileState_Earth,
+     PLTileState_Moon,
+     PLTileState_Meteor,
+     PLTileState_Water,
+     PLTileState_Wave,
+     PLTileState_MoonTide,
+     PLTileState_Sun,
+     PLTileState_Space,
+     PLTileState_Cloud,
+     PLTileState_Lava,
+     PLTileState_Critter,
+     PLTileState_String,
+};
+
 enum PLSceneID {
      PLSceneID_None,
      PLSceneID_MoonPelt,
@@ -16,6 +33,8 @@ struct PLScene {
 
     int32 gridWidth;
     int32 gridHeight;
+
+    DynamicArray<PLTileState> tileStates;
 
     bool inited;
     bool active;
@@ -203,15 +222,12 @@ struct Campfire {
 };
 
 
-PluraLunaData *Data = NULL;
+PluraLunaData *PLData = NULL;
 
 void MoonPeltInit(PLScene *scenePtr) {
     scenePtr->data = PushSize(&GM.gameArena, (sizeof(MoonPelt)));
 
     SetMosaicGridSize(49, 48);
-     
-    scenePtr->gridWidth = 49;
-    scenePtr->gridHeight = 48;
 
     MoonPelt *moon = (MoonPelt *)scenePtr->data;
     memset(moon, 0, sizeof(MoonPelt));
@@ -252,7 +268,7 @@ void MoonPeltInit(PLScene *scenePtr) {
 }
 
 void MoonPeltUpdate(PLScene *scenePtr, void *sceneData) {
-    Data = (PluraLunaData *)GM.gameData;
+    PLData = (PluraLunaData *)GM.gameData;
     MoonPelt *scene = (MoonPelt *)sceneData;
 
     if (scenePtr->firstFrame) {
@@ -570,36 +586,384 @@ void MoonPeltUpdate(PLScene *scenePtr, void *sceneData) {
     }
 
     {
-        PLScene *scene = &Data->scenes[PLSceneID_MoonPelt];
+        PLScene *scene = &PLData->scenes[PLSceneID_MoonPelt];
         if (Time - scene->startTime >= 60.0f) {
-            Data->startNextScene = true;
+            PLData->startNextScene = true;
+        }
+    }
+}
+
+
+void MoonlightInit(MosaicMem *mosaic, PLScene *scenePtr) {
+    scenePtr->data = PushSize(&GM.gameArena, (sizeof(MoonPelt)));
+    Moonlight *scene = (Moonlight *)scenePtr->data;
+
+    SetMosaicGridSize(64, 48);
+
+    scenePtr->tileStates = MakeDynamicArray<PLTileState>(&GM.gameArena, Mosaic->tileCapacity);
+
+    For (i, Mosaic->tileCapacity) {
+        PushBack(&scenePtr->tileStates, PLTileState_Default);
+    }
+
+    scene->depthRange = 16;
+
+    scene->moonPos = V2(11, 11);
+
+    vec2 cloudOrigins[18] = {
+                            V2(5, 4),
+                            V2(15, 4),
+                            V2(25, 4),
+                            V2(35, 4),
+                            V2(45, 4),
+                            V2(55, 4),
+                            V2(65, 4),
+                            V2(75, 4),
+                            V2(95, 4),
+
+                            V2(5, 10),
+                            V2(15, 10),
+                            V2(25, 10),
+                            V2(35, 10),
+                            V2(45, 10),
+                            V2(55, 10),
+                            V2(65, 10),
+                            V2(75, 10),
+                            V2(95, 10),
+    };
+
+    real32 radius = 5;
+    for (int i = 0; i < ARRAY_LENGTH(vec2, cloudOrigins); i++) {
+        vec2 pos = cloudOrigins[i];
+
+        for (int j = 0; j < 200; j++) {
+            Cloud c = {};
+            real32 r = RandfRange(0, radius);
+            vec2 dir = Normalize(V2(RandfRange(-1, 1),
+                                    RandfRange(-1, 1)));
+            
+            c.pos = pos + (dir * r);
+
+            //c.vel = V2(RandfRange(-1.0f, 1.0f), RandfRange(-1.0f, 1.0f)) * RandfRange(0.2f, 0.4f);
+            //c.vel = V2(RandfRange(-1.0f, 1.0f), RandfRange(0, 0)) * RandfRange(0.2f, 0.4f);
+
+            PushBack(&scene->clouds, c);
+        }
+    }
+
+    {
+        Critter c = {};
+        c.pos = V2i(5, 40);
+        c.color = V4(1);
+
+        PushBack(&scene->critters, c);
+    }
+
+    {
+        Critter c = {};
+        c.pos = V2i(3, 44);
+        c.color = V4(0.2f, 0.2f, 0.2f, 1.0f);
+        
+        PushBack(&scene->critters, c);
+    }
+
+    {
+        Critter c = {};
+        c.pos = V2i(8, 44);
+        c.color = V4(0.6f, 0.3f, 0.2f, 1.0f);
+
+        PushBack(&scene->critters, c);
+    }
+
+    LoadSoundClip("data/moonlight_song2.wav", &scene->horseSong);
+    LoadSoundClip("data/slide_guitar_whole.wav", &scene->windSong);
+    // @TODO: generate the light rays, cast them to every pixel, and diminish their intensity as they come down
+}
+
+void MoonlightUpdate(MosaicMem *mosaic, PLScene *scenePtr, void *sceneData) {
+    Moonlight *scene = (Moonlight *)sceneData;
+
+    for (int i = 0; i < Mosaic->tileCapacity; i++) {
+        MTile *tile = &Mosaic->tiles[i];
+        PLTileState *tileState = &scenePtr->tileStates[i];
+
+        *tileState = PLTileState_Default;
+        tile->color = V4(0);
+
+        if (tile->position.y > Mosaic->gridHeight - scene->depthRange) {
+            *tileState = PLTileState_Earth;
+        }
+    }
+
+    if (scenePtr->firstFrame) {
+        PlaySound(&Game->audioPlayer, scene->horseSong, false);
+        PlaySound(&Game->audioPlayer, scene->windSong, false);
+    }
+
+    struct LightRay {
+        real32 intensity;
+    };
+
+    LightRay rays[64];
+    for (int i = 0; i < 64; i++) {
+        rays[i].intensity = 1;
+    }
+
+    scene->mousePosiPrev = scene->mousePosi;
+    MTile *hoveredTile = Mosaic->hoveredTile;
+    bool held = InputHeld(Mouse, Input_MouseLeft);
+    if (hoveredTile == NULL) { held = false; }
+    else { scene->mousePosi = hoveredTile->position; }
+
+    if (held) {
+        if (!scene->grab) {
+            scene->mouseStartPosi = hoveredTile->position;
+            scene->grab = true;
+        }
+    }
+    else {
+        scene->grab = false;
+    }
+
+    vec2 mouseDiff = V2((scene->mousePosi - scene->mouseStartPosi));
+    vec2 pushDir = Normalize(V2((scene->mousePosi - scene->mouseStartPosi)));
+
+    // Problem: the earth is going to band. Each row will always be the same color.
+    // The cloud colors are weird because the edges should be bright and centers dark.
+    // I want round light.
+    // This would actually be a good case of switch between different renders maybe?
+    // Could do splitscreen?
+    // Treat the clouds as having depth as well? That way we map a coordinate in the sky to the earth
+    // That might lead to a checkboard looking pattern. And doesnt seem right because a darker lighter
+    // cloud would produce a brighter earth (I guess that isn't wrong)
+
+    // Hearding clouds: if a particle gets too far, it dissipates
+
+    for (int i = 0; i < scene->clouds.count; i++) {
+        Cloud *cloud = &scene->clouds[i];
+        MTile *tile = GetTile(cloud->pos.x, cloud->pos.y);
+        PLTileState *tileState = &scenePtr->tileStates[i];
+
+        if (cloud->dispersed) { continue; }
+
+        if (!tile) {continue;}
+
+        *tileState = PLTileState_Cloud;
+
+        if (held) {
+            r32 dist = Distance(tile->position, hoveredTile->position);
+            //vec2 dir = Normalize(V2((hoveredTile->position - tile->position)));
+            if (dist < 8) {
+                cloud->vel = cloud->vel + pushDir * Length(mouseDiff) * 0.1f;
+            }
+
+            real32 maxSpeed = 2;
+            cloud->vel = Clamp(cloud->vel, V2(-maxSpeed), V2(maxSpeed));
+
+            real32 damp = 4.0f * Game->deltaTime;
+            // if (Length(cloud->vel) > damp) {
+            //     damp = Length(cloud->vel);
+            // }
+            cloud->vel = cloud->vel - (cloud->vel * damp);
+        }
+
+        cloud->pos = cloud->pos + cloud->vel * Game->deltaTime;
+    }
+    
+
+    for (int i = 0; i < scene->clouds.count; i++) {
+        Cloud *cloud = &scene->clouds[i];
+        MTile *tile = GetTile(cloud->pos.x, cloud->pos.y);
+
+        if (cloud->dispersed) { continue; }
+        
+        if (!tile) {continue;}
+
+        if (tile->position.y > scene->depthRange) {
+            cloud->dispersed = true;
+            continue;
+        }
+        
+        MTile *neighbors[8] = {};
+        GetTileNeighbors(tile, neighbors);
+
+        bool noClouds = true;
+        for (int j = 0; j < 8; j++) {
+            MTile *n = neighbors[j];
+            if (!n) {continue;}
+
+            PLTileState *tileState = &scenePtr->tileStates[GetTileIndex(n->position)];
+
+            if (*tileState == PLTileState_Cloud) {
+                noClouds = false;
+                break;
+            }
+        }
+
+        cloud->dispersed = noClouds;
+    }
+    
+    for (int i = 0; i < scene->critters.count; i++) {
+        Critter *c = &scene->critters[i];
+        MTile *tile = GetTile(c->pos.x, c->pos.y);
+
+        MTile *tile2 = GetTile(c->pos.x - 1, c->pos.y);
+        MTile *tile3 = GetTile(c->pos.x - 2, c->pos.y);
+
+        MTile *tile4 = GetTile(c->pos.x, c->pos.y + 1);
+        MTile *tile5 = GetTile(c->pos.x - 2, c->pos.y + 1);
+
+        if (tile) {
+            tile->color = c->color;
+
+            int32 index = GetTileIndex(c->pos.x, c->pos.y);
+            scenePtr->tileStates[index] = PLTileState_Critter;;
+        }
+        if (tile2) {
+            tile2->color = c->color;
+
+            int32 index = GetTileIndex(c->pos.x - 1, c->pos.y);
+            scenePtr->tileStates[index] = PLTileState_Critter;;
+        }
+        if (tile3) {
+            tile3->color = c->color;
+
+            int32 index = GetTileIndex(c->pos.x - 2, c->pos.y);
+            scenePtr->tileStates[index] = PLTileState_Critter;;
+        }
+
+        if (tile4) {
+            tile4->color = V4(0.3f, 0.1f, 0.0f, 1.0f);
+
+            int32 index = GetTileIndex(c->pos.x, c->pos.y + 1);
+            scenePtr->tileStates[index] = PLTileState_Critter;
+        }
+
+        if (tile5) {
+            tile5->color = V4(0.3f, 0.1f, 0.0f, 1.0f);
+
+            int32 index = GetTileIndex(c->pos.x - 2, c->pos.y + 1);
+            scenePtr->tileStates[index] = PLTileState_Critter;
+        }
+
+        MTile *tile6 = GetTile(c->pos.x, c->pos.y - 1);
+        if (tile6) {
+            tile6->color = c->color;
+
+            int32 index = GetTileIndex(c->pos.x, c->pos.y - 1);
+            scenePtr->tileStates[index] = PLTileState_Critter;
+        }
+
+        MTile *tile7 = GetTile(c->pos.x + 1, c->pos.y - 1);
+        if (tile7) {
+            tile7->color = c->color;
+
+            int32 index = GetTileIndex(c->pos.x + 1, c->pos.y - 1);
+            scenePtr->tileStates[index] = PLTileState_Critter;
+        }
+    }
+
+    for (int x = 0; x < Mosaic->gridWidth; x++) {
+        LightRay *ray = &rays[x];
+        for (int y = 0; y < Mosaic->gridHeight; y++) {
+            MTile *tile = GetTile(x, y);
+            PLTileState *tileState = &scenePtr->tileStates[GetTileIndex(x, y)];
+
+            if (*tileState == PLTileState_Cloud) {
+                ray->intensity -= 0.1f;
+            }
+
+            ray->intensity = Clamp(ray->intensity, 0.3f, 1.0f);
+
+            if (*tileState == PLTileState_Cloud) {
+                real32 ambient = 0.4f;
+                tile->color = V4(ambient, ambient, ambient, 1.0f) + V4(0.8f, 0.8f, 0.8f, 1.0f) * ray->intensity;
+                tile->color.a = ray->intensity;
+            }
+            else {
+                tile->color.a = 1.0f;
+            }
+
+            if (*tileState == PLTileState_Earth) {
+                MTile *cloudTileAtDepth = GetTile(x, y - scene->depthRange * 2);
+
+                real32 intensity = cloudTileAtDepth->color.a;
+                //cloudTileAtDepth->color.a = 1;
+                real32 ambient = 0.4f;
+
+                if (intensity < 1) {
+                    intensity = 0;
+                }
+                tile->color = V4(0.0f, 0.1f, 0.0f, 1.0f) + V4(0.1f, 0.2f, 0.2f, 1.0f) * (intensity);
+                //tile->color = cloudTileAtDepth->color;
+            }
+
+            if (*tileState == PLTileState_Default) {
+                real32 t = tile->position.y / (scene->depthRange * 2.0f);
+                tile->color = Lerp(V4(0.075f, 0.0f, 0.075f, 1.0f), V4(0.05f, 0.0f, 0.05f, 1.0f), t);
+            }
+        }
+    }
+
+
+    for (int i = 0; i < scene->critters.count; i++) {
+        Critter *c = &scene->critters[i];
+        MTile *tile = GetTile(c->pos.x, c->pos.y);
+
+        real32 timeSinceMoved = Game->time - c->timeMoved;
+        MTile *front = GetTile(c->pos.x + 1, c->pos.y);
+
+        if (front == NULL) { continue; }
+        
+        PLTileState *frontState = &scenePtr->tileStates[GetTileIndex(c->pos.x + 1, c->pos.y)];
+
+        MTile *front2 = GetTile(c->pos.x + 2, c->pos.y);
+        MTile *cloudTileAtDepth = GetTile(front->position.x, front->position.y - scene->depthRange * 2);
+        
+        if (!front2) { continue; }
+
+        PLTileState *front2State = &scenePtr->tileStates[GetTileIndex(c->pos.x + 2, c->pos.y)];
+
+        if (*frontState != PLTileState_Critter && *front2State != PLTileState_Critter && cloudTileAtDepth->color.a == 1.0f && timeSinceMoved > 0.4f) {
+            c->timeMoved = Game->time;
+            c->pos.x += 1;
+        }
+    }
+ 
+    if (hoveredTile) {
+        hoveredTile->color = V4(0.0, 0.4f, 0.8f, 1.0f);
+    }
+
+    {
+        if (Game->time - scenePtr->startTime >= 36.0f) {
+            PLData->startNextScene = true;
         }
     }
 }
 
 void PLSetScene(PLSceneID id) {
-    Data = (PluraLunaData *)GM.gameData;
-    Data->currScene = id;
+    PLData = (PluraLunaData *)GM.gameData;
+    PLData->currScene = id;
 
-    PLScene *scene = &Data->scenes[id];
+    PLScene *scene = &PLData->scenes[id];
     scene->firstFrame = true;
 }
 
 void PluraLunaInit() {
-    Data = (PluraLunaData *)GM.gameData;
+    PLData = (PluraLunaData *)GM.gameData;
 
-    MoonPeltInit(&Data->scenes[PLSceneID_MoonPelt]);
+    MoonPeltInit(&PLData->scenes[PLSceneID_MoonPelt]);
 
     PLSetScene(PLSceneID_MoonPelt);
 }
 
 void PluraLunaUpdate() {
-    Data = (PluraLunaData *)GM.gameData;
+    PLData = (PluraLunaData *)GM.gameData;
     
-    PLScene *scene = &Data->scenes[Data->currScene];
-    void *sceneData = Data->scenes[Data->currScene].data;
+    PLScene *scene = &PLData->scenes[PLData->currScene];
+    void *sceneData = PLData->scenes[PLData->currScene].data;
 
-    switch (Data->currScene) {
+    switch (PLData->currScene) {
     case PLSceneID_MoonPelt : {
         MoonPeltUpdate(scene, sceneData);
     } break;

@@ -76,6 +76,12 @@ MTile*GetTile(int32 x, int32 y);
 MTile*GetTile(vec2i pos);
 MTile*GetTile(vec2 pos);
 
+int32 GetTileIndex(int32 x, int32 y);
+int32 GetTileIndex(vec2 pos);
+int32 GetTileIndex(vec2i pos);
+
+void GetTileNeighbors(MTile *tile, MTile **neighbors);
+
 void GetTileBlock(int32 x, int32 y, int32 width, int32 height, MTile**tiles, int32 *tilesRetrieved);
 
 void GetTilesInLine(int32 x0, int32 y0, int32 x1, int32 y1);
