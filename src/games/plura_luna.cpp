@@ -594,7 +594,7 @@ void MoonPeltUpdate(PLScene *scenePtr, void *sceneData) {
 }
 
 
-void MoonlightInit(MosaicMem *mosaic, PLScene *scenePtr) {
+void MoonlightInit(PLScene *scenePtr) {
     scenePtr->data = PushSize(&GM.gameArena, (sizeof(MoonPelt)));
     Moonlight *scene = (Moonlight *)scenePtr->data;
 
@@ -631,6 +631,9 @@ void MoonlightInit(MosaicMem *mosaic, PLScene *scenePtr) {
                             V2(75, 10),
                             V2(95, 10),
     };
+
+    scene->clouds = MakeDynamicArray<Cloud>(&GM.gameArena, 20);
+    scene->critters = MakeDynamicArray<Critter>(&GM.gameArena, 20);
 
     real32 radius = 5;
     for (int i = 0; i < ARRAY_LENGTH(vec2, cloudOrigins); i++) {
@@ -680,7 +683,7 @@ void MoonlightInit(MosaicMem *mosaic, PLScene *scenePtr) {
     // @TODO: generate the light rays, cast them to every pixel, and diminish their intensity as they come down
 }
 
-void MoonlightUpdate(MosaicMem *mosaic, PLScene *scenePtr, void *sceneData) {
+void MoonlightUpdate(PLScene *scenePtr, void *sceneData) {
     Moonlight *scene = (Moonlight *)sceneData;
 
     for (int i = 0; i < Mosaic->tileCapacity; i++) {
@@ -727,6 +730,8 @@ void MoonlightUpdate(MosaicMem *mosaic, PLScene *scenePtr, void *sceneData) {
 
     vec2 mouseDiff = V2((scene->mousePosi - scene->mouseStartPosi));
     vec2 pushDir = Normalize(V2((scene->mousePosi - scene->mouseStartPosi)));
+
+    Print("%f %f", pushDir.x, pushDir.y);
 
     // Problem: the earth is going to band. Each row will always be the same color.
     // The cloud colors are weird because the edges should be bright and centers dark.
@@ -863,11 +868,14 @@ void MoonlightUpdate(MosaicMem *mosaic, PLScene *scenePtr, void *sceneData) {
         }
     }
 
-    for (int x = 0; x < Mosaic->gridWidth; x++) {
-        LightRay *ray = &rays[x];
-        for (int y = 0; y < Mosaic->gridHeight; y++) {
+    for (int y = 0; y < Mosaic->gridHeight; y++) {
+        for (int x = 0; x < Mosaic->gridWidth; x++) {
+            LightRay *ray = &rays[x];
+            
             MTile *tile = GetTile(x, y);
             PLTileState *tileState = &scenePtr->tileStates[GetTileIndex(x, y)];
+
+            vec2 pos = V2(tile->position.x, tile->position.y);
 
             int32 index = x + (y * Mosaic->gridHeight);
             real32 signedNoise = Sum1f(&Perlin1f, (((Time * 0.2f) + (index * 0.5f))) * 0.2f, 1.0f, 1.0f);
@@ -877,11 +885,9 @@ void MoonlightUpdate(MosaicMem *mosaic, PLScene *scenePtr, void *sceneData) {
                 ray->intensity -= 0.1f;
             }
 
-            vec2 pos = V2(tile->position.x, tile->position.y);
-
             SetTileSprite(pos, 1);
-            SetTileScale(pos, 2.0f);
-            SetTileRotation(pos, normNoise * _PI);
+            SetTileScale(pos, 1.0f);
+            //SetTileRotation(pos, normNoise * _PI);
 
             ray->intensity = Clamp(ray->intensity, 0.3f, 1.0f);
 
