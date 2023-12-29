@@ -869,9 +869,19 @@ void MoonlightUpdate(MosaicMem *mosaic, PLScene *scenePtr, void *sceneData) {
             MTile *tile = GetTile(x, y);
             PLTileState *tileState = &scenePtr->tileStates[GetTileIndex(x, y)];
 
+            int32 index = x + (y * Mosaic->gridHeight);
+            real32 signedNoise = Sum1f(&Perlin1f, (((Time * 0.2f) + (index * 0.5f))) * 0.2f, 1.0f, 1.0f);
+            real32 normNoise = (1 + signedNoise) * 0.5f;
+
             if (*tileState == PLTileState_Cloud) {
                 ray->intensity -= 0.1f;
             }
+
+            vec2 pos = V2(tile->position.x, tile->position.y);
+
+            SetTileSprite(pos, 1);
+            SetTileScale(pos, 2.0f);
+            SetTileRotation(pos, normNoise * _PI);
 
             ray->intensity = Clamp(ray->intensity, 0.3f, 1.0f);
 
