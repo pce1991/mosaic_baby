@@ -963,8 +963,9 @@ void PluraLunaInit() {
     PLData = (PluraLunaData *)GM.gameData;
 
     MoonPeltInit(&PLData->scenes[PLSceneID_MoonPelt]);
+    MoonlightInit(&PLData->scenes[PLSceneID_Moonlight]);
 
-    PLSetScene(PLSceneID_MoonPelt);
+    PLSetScene(PLSceneID_Moonlight);
 }
 
 void PluraLunaUpdate() {
@@ -976,6 +977,9 @@ void PluraLunaUpdate() {
     switch (PLData->currScene) {
     case PLSceneID_MoonPelt : {
         MoonPeltUpdate(scene, sceneData);
+    } break;
+    case PLSceneID_Moonlight : {
+        MoonlightUpdate(scene, sceneData);
     } break;
     }
 
