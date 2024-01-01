@@ -765,14 +765,14 @@ void MoonlightUpdate(PLScene *scenePtr, void *sceneData) {
             real32 maxSpeed = 2;
             cloud->vel = Clamp(cloud->vel, V2(-maxSpeed), V2(maxSpeed));
 
-            real32 damp = 4.0f * Game->deltaTime;
+            real32 damp = 4.0f * DeltaTime;
             // if (Length(cloud->vel) > damp) {
             //     damp = Length(cloud->vel);
             // }
             cloud->vel = cloud->vel - (cloud->vel * damp);
         }
 
-        cloud->pos = cloud->pos + cloud->vel * Game->deltaTime;
+        cloud->pos = cloud->pos + cloud->vel * DeltaTime;
     }
     
 
@@ -955,6 +955,9 @@ void MoonlightUpdate(PLScene *scenePtr, void *sceneData) {
             PLData->startNextScene = true;
         }
     }
+
+    int32 x = ((1 + sinf(Time)) * 0.5f) * Mosaic->gridWidth;
+    SetTileColor(x, 0, 1, 0, 0);
 }
 
 void PLSetScene(PLSceneID id) {
