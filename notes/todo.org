@@ -23,3 +23,6 @@ for coverage on cells we could draw a big tile which covers the whole area
 
 @TODO: get a regular square mask and use that for the default rendering
 - this definitely kills simplicity a bit...
+
+
+@BUG: Okay what's going on with the random number generator? we never get good real number values because we do this & 0x7FFF which means our max never approaches INT_MAX, so if we use that for getting our ratio we're always very small

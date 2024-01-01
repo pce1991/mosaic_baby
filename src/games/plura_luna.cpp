@@ -642,6 +642,7 @@ void MoonlightInit(PLScene *scenePtr) {
         for (int j = 0; j < 200; j++) {
             Cloud c = {};
             real32 r = RandfRange(0, radius);
+            
             vec2 dir = Normalize(V2(RandfRange(-1, 1),
                                     RandfRange(-1, 1)));
             
@@ -698,6 +699,9 @@ void MoonlightUpdate(PLScene *scenePtr, void *sceneData) {
         }
     }
 
+    MTile *inspectTile = GetTile(0, Mosaic->gridHeight - 2);
+    PLTileState *inspectTileState = &scenePtr->tileStates[GetTileIndex(inspectTile->position)];
+
     if (scenePtr->firstFrame) {
         PlaySound(&Game->audioPlayer, scene->horseSong, false);
         PlaySound(&Game->audioPlayer, scene->windSong, false);
@@ -731,7 +735,7 @@ void MoonlightUpdate(PLScene *scenePtr, void *sceneData) {
     vec2 mouseDiff = V2((scene->mousePosi - scene->mouseStartPosi));
     vec2 pushDir = Normalize(V2((scene->mousePosi - scene->mouseStartPosi)));
 
-    Print("%f %f", pushDir.x, pushDir.y);
+    //Print("%f %f", pushDir.x, pushDir.y);
 
     // Problem: the earth is going to band. Each row will always be the same color.
     // The cloud colors are weird because the edges should be bright and centers dark.
@@ -747,13 +751,17 @@ void MoonlightUpdate(PLScene *scenePtr, void *sceneData) {
     for (int i = 0; i < scene->clouds.count; i++) {
         Cloud *cloud = &scene->clouds[i];
         MTile *tile = GetTile(cloud->pos.x, cloud->pos.y);
-        PLTileState *tileState = &scenePtr->tileStates[i];
+        
+        if (tile == NULL) {continue;}
+
+        int32 tileIndex = GetTileIndex(tile->position);
+        PLTileState *tileState = &scenePtr->tileStates[tileIndex];
 
         if (cloud->dispersed) { continue; }
 
-        if (!tile) {continue;}
-
         *tileState = PLTileState_Cloud;
+
+        //Print("setting tile %d %d to cloud", tile->position.x, tile->position.y);
 
         if (held) {
             r32 dist = Distance(tile->position, hoveredTile->position);
@@ -807,7 +815,7 @@ void MoonlightUpdate(PLScene *scenePtr, void *sceneData) {
 
         cloud->dispersed = noClouds;
     }
-    
+
     for (int i = 0; i < scene->critters.count; i++) {
         Critter *c = &scene->critters[i];
         MTile *tile = GetTile(c->pos.x, c->pos.y);
@@ -910,6 +918,7 @@ void MoonlightUpdate(PLScene *scenePtr, void *sceneData) {
                 if (intensity < 1) {
                     intensity = 0;
                 }
+                
                 tile->color = V4(0.0f, 0.1f, 0.0f, 1.0f) + V4(0.1f, 0.2f, 0.2f, 1.0f) * (intensity);
                 //tile->color = cloudTileAtDepth->color;
             }
@@ -956,8 +965,10 @@ void MoonlightUpdate(PLScene *scenePtr, void *sceneData) {
         }
     }
 
-    int32 x = ((1 + sinf(Time)) * 0.5f) * Mosaic->gridWidth;
-    SetTileColor(x, 0, 1, 0, 0);
+    // int32 x = ((1 + sinf(Time)) * 0.5f) * Mosaic->gridWidth;
+    // SetTileColor(x, 0, 1, 0, 0);
+
+    //inspectTile->color = V4(0, 1, 0, 1);
 }
 
 void PLSetScene(PLSceneID id) {
