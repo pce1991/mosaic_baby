@@ -693,8 +693,8 @@ void MoonlightUpdate(PLScene *scenePtr, void *sceneData) {
     if (scenePtr->firstFrame) {
         SetMosaicGridSize(64, 48);
 
-        PlaySound(&Game->audioPlayer, scene->horseSong, false);
-        PlaySound(&Game->audioPlayer, scene->windSong, false);
+        PlaySound(&Game->audioPlayer, scene->horseSong, 1.0f);
+        PlaySound(&Game->audioPlayer, scene->windSong, 1.0f);
     }
 
     for (int i = 0; i < Mosaic->tileCapacity; i++) {
@@ -1003,7 +1003,7 @@ void PondUpdate(PLScene *scenePtr, void *sceneData) {
     Pond *scene = (Pond *)sceneData;
 
     if (scenePtr->firstFrame) {
-        PlaySound(&Game->audioPlayer, scene->song, false);
+        PlaySound(&Game->audioPlayer, scene->song, 1.0);
 
         SetMosaicGridSize(scenePtr->gridWidth, scenePtr->gridHeight);
     }
@@ -1077,6 +1077,16 @@ void PondUpdate(PLScene *scenePtr, void *sceneData) {
         SetTileSprite(pos, 1);
         SetTileScale(pos, 1.5f);
         SetTileRotation(pos, i * 0.5f);
+
+        if (pos.x == 0 || pos.x == Mosaic->gridWidth - 1 ||
+            pos.y == 0 || pos.y == Mosaic->gridHeight - 1
+            ) {
+            real32 s = ((1 + sinf(Time)) * 0.5f);
+            SetTileScale(pos, 2.5f + s);
+            SetTileRotation(pos, (i + s) * 0.5f);
+        }
+        
+        
         
         if (tile->position.y > scene->mousePosi.y) {
             int32 pawHeight = 12;
