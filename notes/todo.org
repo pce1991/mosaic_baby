@@ -25,4 +25,7 @@ for coverage on cells we could draw a big tile which covers the whole area
 - this definitely kills simplicity a bit...
 
 
-@BUG: Okay what's going on with the random number generator? we never get good real number values because we do this & 0x7FFF which means our max never approaches INT_MAX, so if we use that for getting our ratio we're always very small
+@BUG: why do we have mem corruption in moonlight? setting the tile color overwrites our audio data? 
+- when we call SetGridSize we do a memset and that doesn't touch it all
+- somethin to do with tileStates seems more likely
+- LoadSoundClip is changing things inside our state dynamic array??? wtf are we not pushing data correctly onto our PL scene? 

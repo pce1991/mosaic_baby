@@ -227,8 +227,6 @@ PluraLunaData *PLData = NULL;
 void MoonPeltInit(PLScene *scenePtr) {
     scenePtr->data = PushSize(&GM.gameArena, (sizeof(MoonPelt)));
 
-    SetMosaicGridSize(49, 48);
-
     MoonPelt *moon = (MoonPelt *)scenePtr->data;
     memset(moon, 0, sizeof(MoonPelt));
 
@@ -272,6 +270,8 @@ void MoonPeltUpdate(PLScene *scenePtr, void *sceneData) {
     MoonPelt *scene = (MoonPelt *)sceneData;
 
     if (scenePtr->firstFrame) {
+        SetMosaicGridSize(64, 48);
+
         PlaySound(&Game->audioPlayer, scene->backingClip, 1.0f);
     }
 
@@ -595,14 +595,17 @@ void MoonPeltUpdate(PLScene *scenePtr, void *sceneData) {
 
 
 void MoonlightInit(PLScene *scenePtr) {
-    scenePtr->data = PushSize(&GM.gameArena, (sizeof(MoonPelt)));
+    scenePtr->data = PushSize(&GM.gameArena, (sizeof(Moonlight)));
     Moonlight *scene = (Moonlight *)scenePtr->data;
+    
+    scenePtr->gridWidth = 64;
+    scenePtr->gridHeight = 48;
 
-    SetMosaicGridSize(64, 48);
+    int32 tileCapacity = scenePtr->gridWidth * scenePtr->gridHeight;
 
-    scenePtr->tileStates = MakeDynamicArray<PLTileState>(&GM.gameArena, Mosaic->tileCapacity);
+    scenePtr->tileStates = MakeDynamicArray<PLTileState>(&GM.gameArena, tileCapacity);
 
-    For (i, Mosaic->tileCapacity) {
+    For (i, tileCapacity) {
         PushBack(&scenePtr->tileStates, PLTileState_Default);
     }
 
@@ -679,13 +682,20 @@ void MoonlightInit(PLScene *scenePtr) {
         PushBack(&scene->critters, c);
     }
 
-    LoadSoundClip("data/moonlight_song2.wav", &scene->horseSong);
-    LoadSoundClip("data/slide_guitar_whole.wav", &scene->windSong);
+    LoadSoundClip("data/plura_luna/moonlight_song2.wav", &scene->horseSong);
+    LoadSoundClip("data/plura_luna/slide_guitar_whole.wav", &scene->windSong);
     // @TODO: generate the light rays, cast them to every pixel, and diminish their intensity as they come down
 }
 
 void MoonlightUpdate(PLScene *scenePtr, void *sceneData) {
     Moonlight *scene = (Moonlight *)sceneData;
+
+    if (scenePtr->firstFrame) {
+        SetMosaicGridSize(64, 48);
+
+        PlaySound(&Game->audioPlayer, scene->horseSong, false);
+        PlaySound(&Game->audioPlayer, scene->windSong, false);
+    }
 
     for (int i = 0; i < Mosaic->tileCapacity; i++) {
         MTile *tile = &Mosaic->tiles[i];
@@ -701,11 +711,6 @@ void MoonlightUpdate(PLScene *scenePtr, void *sceneData) {
 
     MTile *inspectTile = GetTile(0, Mosaic->gridHeight - 2);
     PLTileState *inspectTileState = &scenePtr->tileStates[GetTileIndex(inspectTile->position)];
-
-    if (scenePtr->firstFrame) {
-        PlaySound(&Game->audioPlayer, scene->horseSong, false);
-        PlaySound(&Game->audioPlayer, scene->windSong, false);
-    }
 
     struct LightRay {
         real32 intensity;
@@ -894,8 +899,8 @@ void MoonlightUpdate(PLScene *scenePtr, void *sceneData) {
             }
 
             SetTileSprite(pos, 1);
-            SetTileScale(pos, 1.0f);
-            //SetTileRotation(pos, normNoise * _PI);
+            SetTileScale(pos, 1.5f + (normNoise * 0.4f));
+            SetTileRotation(pos, normNoise * _PI);
 
             ray->intensity = Clamp(ray->intensity, 0.3f, 1.0f);
 
@@ -909,18 +914,18 @@ void MoonlightUpdate(PLScene *scenePtr, void *sceneData) {
             }
 
             if (*tileState == PLTileState_Earth) {
-                MTile *cloudTileAtDepth = GetTile(x, y - scene->depthRange * 2);
-
-                real32 intensity = cloudTileAtDepth->color.a;
-                //cloudTileAtDepth->color.a = 1;
+                real32 intensity = 1;
                 real32 ambient = 0.4f;
 
-                if (intensity < 1) {
-                    intensity = 0;
+                if (MTile *cloudTileAtDepth = GetTile(x, y - scene->depthRange * 2)) {
+                    intensity = cloudTileAtDepth->color.a;
+                    
+                    if (intensity < 1) {
+                        intensity = 0;
+                    }
                 }
                 
                 tile->color = V4(0.0f, 0.1f, 0.0f, 1.0f) + V4(0.1f, 0.2f, 0.2f, 1.0f) * (intensity);
-                //tile->color = cloudTileAtDepth->color;
             }
 
             if (*tileState == PLTileState_Default) {
@@ -971,6 +976,192 @@ void MoonlightUpdate(PLScene *scenePtr, void *sceneData) {
     //inspectTile->color = V4(0, 1, 0, 1);
 }
 
+void PondInit(PLScene *scenePtr) {
+    scenePtr->data = PushSize(&GM.gameArena, (sizeof(MoonPelt)));
+    Pond *scene = (Pond *)scenePtr->data;
+
+    scenePtr->gridWidth = 64;
+    scenePtr->gridHeight = 64;
+
+    scene->moonPos = V2(32, 32);
+
+    scene->pondColor = V4(0.05f, 0.05f, 0.2f, 1.0f);
+
+    vec3 tileNormal = Normalize(V3(0.0f, 0.0f, 1.0f));
+
+    scene->tileNormals = MakeDynamicArray<vec3>(&GM.gameArena, scenePtr->gridWidth * scenePtr->gridHeight);
+    scene->waves = MakeDynamicArray<Wave>(&GM.gameArena, 100);
+
+    for (int i = 0; i < scenePtr->gridWidth * scenePtr->gridWidth; i++) {
+        PushBack(&scene->tileNormals, tileNormal);
+    }
+
+    LoadSoundClip("data/pond_song_short.wav", &scene->song);
+}
+
+void PondUpdate(PLScene *scenePtr, void *sceneData) {
+    Pond *scene = (Pond *)sceneData;
+
+    if (scenePtr->firstFrame) {
+        PlaySound(&Game->audioPlayer, scene->song, false);
+    }
+    
+    real32 moonRadius = 50.0f;
+    real32 moonInnerRadius = 5.0f;
+    vec2i moonPosi = V2i(scene->moonPos);
+
+    MTile *hoveredTile = Mosaic->hoveredTile;
+
+    real32 mouseRadius = 8;
+    vec2 mouseDir = V2(0);
+    if (hoveredTile != NULL) {
+        scene->mousePosiPrev = scene->mousePosi;
+        scene->mousePosi = hoveredTile->position;
+
+        if (InputHeld(Mouse, Input_MouseLeft)) {
+            mouseDir = (V2)(scene->mousePosi - scene->mousePosiPrev);
+        }
+    }
+    else {
+        mouseDir = V2(0);
+    }
+
+    if (hoveredTile != NULL && InputPressed(Mouse, Input_MouseLeft)) {
+        //DynamicArrayClear(&scene->waves);
+        
+        Wave wave = {};
+        wave.time = Game->time;
+        wave.orig = hoveredTile->position;
+        wave.radius = 8.0f;
+        wave.strength = -1.0f;
+        PushBack(&scene->waves, wave);
+        
+        real32 radius = 8;
+    }
+
+    real32 slop = 0.5f;
+    vec2i waveDiff = {};
+
+    vec3 eyePos = V3(scene->moonPos, 8);
+    vec3 moonPos3D = V3(scene->moonPos, 100);
+    
+    for (int i = 0; i < Mosaic->tileCapacity; i++) {
+        MTile *tile = &Mosaic->tiles[i];
+
+        vec4 color = scene->pondColor;
+
+        real32 moonDist = Distance(tile->position, moonPosi);
+        real32 distT = 1.0f - Clamp(moonDist / 64, 0.0f, 1.0f);
+
+        vec3 tilePos = V3(tile->position.x, tile->position.y, 0.0f);
+        vec3 tileNormal = Normalize(scene->tileNormals[i]);
+        
+        vec3 diff = moonPos3D - tilePos; 
+        vec3 dir = Normalize(diff);
+
+        vec3 dirEye = Normalize(eyePos - tilePos);
+        vec3 deflect = Normalize((tileNormal * (2 * Dot(dir, tileNormal))) - dir);
+
+        real32 ambient = 1.0f;
+        real32 diffuse = 0.5f;
+        real32 specular = 16.0f;
+        int32 shininess = 4;
+
+        bool specularOnly = false;
+        bool diffuseOnly = false;
+        bool ambientOnly = false;
+
+        
+        if (tile->position.y > scene->mousePosi.y) {
+
+            int32 pawHeight = 12;
+            int32 width = 5;
+
+            real32 heightDiff = tile->position.y - scene->mousePosi.y;
+            
+
+            vec4 clawColor = V4(0.6f, 0.6f, 0.6f, 1.0f);
+            vec4 colorToUse = V4(0.1f, 0.1f, 0.1f, 1.0f);
+
+            bool skipEven = false;
+
+            if (heightDiff < 3) {
+                skipEven = true;
+                colorToUse = clawColor;
+                width = 5;
+            }
+            else if (heightDiff < 5) {
+                width = 5;
+            }
+            else if (heightDiff < pawHeight) {
+                width = 6;
+            }
+
+            int32 widthDiff = tile->position.x - scene->mousePosi.x;
+
+            if (widthDiff > -width && widthDiff < width) {
+                if (skipEven) {
+                    if (widthDiff % 2 != 0) {                
+                        color = colorToUse;
+                        specular = 0.0f;
+                    }
+                }
+                else {
+                    color = colorToUse;
+                    specular = 0.0f;
+                }
+           }
+        }
+
+        if (ambientOnly) {
+            diffuse = 0;
+            specular = 0;
+            shininess = 0;
+        }
+        if (diffuseOnly) {
+            ambient = 0;
+            specular = 0;
+            shininess = 0;
+        }
+        if (specularOnly) {
+            ambient = 0;
+            diffuse = 0;
+        }
+        
+        real32 l = ambient + (diffuse * Dot(dir, tileNormal)) + (specular * pow(Dot(dirEye, deflect), shininess));
+
+        tile->color = color * l;
+        tile->color.a = 1.0f;
+
+        if (Length(mouseDir) > 0.1f) {
+            r32 dist = Distance(tile->position, scene->mousePosi);
+
+            if (dist < mouseRadius) {
+                scene->tileNormals[i] = Normalize(scene->tileNormals[i] + Normalize(V3(mouseDir, 0)) * Length(mouseDir));
+            }
+        }
+
+        {
+            vec3 normal = V3(0, 0, 1);
+            vec3 diff = scene->tileNormals[i] - normal;
+            scene->tileNormals[i] = Normalize(scene->tileNormals[i] - (diff * Game->deltaTime * 2));
+            
+            if (i == (64 * 32) + 32) {
+                Print("%f %f %f", scene->tileNormals[i].x, scene->tileNormals[i].y, scene->tileNormals[i].z);
+            }
+            //if (Length(dist) < 0.5f) {
+            //scene->tileNormals[i] = normal;
+                //}
+        }
+    }
+
+    {
+        if (Game->time - scenePtr->startTime >= 21.0f) {
+            PLData->startNextScene = true;
+        }
+    }
+}
+
 void PLSetScene(PLSceneID id) {
     PLData = (PluraLunaData *)GM.gameData;
     PLData->currScene = id;
@@ -984,8 +1175,11 @@ void PluraLunaInit() {
 
     MoonPeltInit(&PLData->scenes[PLSceneID_MoonPelt]);
     MoonlightInit(&PLData->scenes[PLSceneID_Moonlight]);
+    //PondInit(&PLData->scenes[PLSceneID_Pond]);
 
     PLSetScene(PLSceneID_Moonlight);
+    //PLSetScene(PLSceneID_MoonPelt);
+    //PLSetScene(PLSceneID_Pond);
 }
 
 void PluraLunaUpdate() {
