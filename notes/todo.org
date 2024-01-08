@@ -25,7 +25,7 @@ for coverage on cells we could draw a big tile which covers the whole area
 - this definitely kills simplicity a bit...
 
 
-@BUG: why do we have mem corruption in moonlight? setting the tile color overwrites our audio data? 
-- when we call SetGridSize we do a memset and that doesn't touch it all
-- somethin to do with tileStates seems more likely
-- LoadSoundClip is changing things inside our state dynamic array??? wtf are we not pushing data correctly onto our PL scene? 
+It's interesting how the waves_alpha.png can create these really interesting swirl patterns
+
+
+@TODO: I think the waves should have increasing radius. They should look at all the neighboring tiles and animate their features towards some value based on distance from the wave. The tiles need to return to their normal values over time. 

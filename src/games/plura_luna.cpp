@@ -977,7 +977,7 @@ void MoonlightUpdate(PLScene *scenePtr, void *sceneData) {
 }
 
 void PondInit(PLScene *scenePtr) {
-    scenePtr->data = PushSize(&GM.gameArena, (sizeof(MoonPelt)));
+    scenePtr->data = PushSize(&GM.gameArena, (sizeof(Pond)));
     Pond *scene = (Pond *)scenePtr->data;
 
     scenePtr->gridWidth = 64;
@@ -996,7 +996,7 @@ void PondInit(PLScene *scenePtr) {
         PushBack(&scene->tileNormals, tileNormal);
     }
 
-    LoadSoundClip("data/pond_song_short.wav", &scene->song);
+    LoadSoundClip("data/plura_luna/pond_song_short.wav", &scene->song);
 }
 
 void PondUpdate(PLScene *scenePtr, void *sceneData) {
@@ -1004,6 +1004,8 @@ void PondUpdate(PLScene *scenePtr, void *sceneData) {
 
     if (scenePtr->firstFrame) {
         PlaySound(&Game->audioPlayer, scene->song, false);
+
+        SetMosaicGridSize(scenePtr->gridWidth, scenePtr->gridHeight);
     }
     
     real32 moonRadius = 50.0f;
@@ -1030,7 +1032,7 @@ void PondUpdate(PLScene *scenePtr, void *sceneData) {
         //DynamicArrayClear(&scene->waves);
         
         Wave wave = {};
-        wave.time = Game->time;
+        wave.time = Time;
         wave.orig = hoveredTile->position;
         wave.radius = 8.0f;
         wave.strength = -1.0f;
@@ -1044,9 +1046,10 @@ void PondUpdate(PLScene *scenePtr, void *sceneData) {
 
     vec3 eyePos = V3(scene->moonPos, 8);
     vec3 moonPos3D = V3(scene->moonPos, 100);
-    
+
     for (int i = 0; i < Mosaic->tileCapacity; i++) {
         MTile *tile = &Mosaic->tiles[i];
+        vec2 pos = V2(tile->position.x, tile->position.y);
 
         vec4 color = scene->pondColor;
 
@@ -1071,9 +1074,11 @@ void PondUpdate(PLScene *scenePtr, void *sceneData) {
         bool diffuseOnly = false;
         bool ambientOnly = false;
 
+        SetTileSprite(pos, 1);
+        SetTileScale(pos, 1.5f);
+        SetTileRotation(pos, i * 0.5f);
         
         if (tile->position.y > scene->mousePosi.y) {
-
             int32 pawHeight = 12;
             int32 width = 5;
 
@@ -1149,11 +1154,22 @@ void PondUpdate(PLScene *scenePtr, void *sceneData) {
             if (i == (64 * 32) + 32) {
                 Print("%f %f %f", scene->tileNormals[i].x, scene->tileNormals[i].y, scene->tileNormals[i].z);
             }
-            //if (Length(dist) < 0.5f) {
-            //scene->tileNormals[i] = normal;
-                //}
         }
     }
+
+    // @TODO: the tiles should have their scale and rotation affected by the light
+    // for (int i = Mosaic->tileCapacity - 1; i >= 0; i--) {
+    //     Wave *wave = &scene->waves[i];
+    //     real32 elapsed = Time - wave->time;
+
+    //     vec2 center = wave.orig;
+
+    //     for (int32 y = -wave.radius; y <= wave.radius; y++) {
+    //         for (int32 x = -wave.radius; x <= wave.radius; x++) {
+
+    //         }
+    //     }
+    // }
 
     {
         if (Game->time - scenePtr->startTime >= 21.0f) {
@@ -1175,11 +1191,11 @@ void PluraLunaInit() {
 
     MoonPeltInit(&PLData->scenes[PLSceneID_MoonPelt]);
     MoonlightInit(&PLData->scenes[PLSceneID_Moonlight]);
-    //PondInit(&PLData->scenes[PLSceneID_Pond]);
+    PondInit(&PLData->scenes[PLSceneID_Pond]);
 
-    PLSetScene(PLSceneID_Moonlight);
+    //PLSetScene(PLSceneID_Moonlight);
     //PLSetScene(PLSceneID_MoonPelt);
-    //PLSetScene(PLSceneID_Pond);
+    PLSetScene(PLSceneID_Pond);
 }
 
 void PluraLunaUpdate() {
@@ -1189,12 +1205,15 @@ void PluraLunaUpdate() {
     void *sceneData = PLData->scenes[PLData->currScene].data;
 
     switch (PLData->currScene) {
-    case PLSceneID_MoonPelt : {
-        MoonPeltUpdate(scene, sceneData);
-    } break;
-    case PLSceneID_Moonlight : {
-        MoonlightUpdate(scene, sceneData);
-    } break;
+        case PLSceneID_MoonPelt : {
+            MoonPeltUpdate(scene, sceneData);
+        } break;
+        case PLSceneID_Moonlight : {
+            MoonlightUpdate(scene, sceneData);
+        } break;
+        case PLSceneID_Pond : {
+            PondUpdate(scene, sceneData);
+        } break;
     }
 
     scene->firstFrame = false;
