@@ -353,9 +353,6 @@ int32 MTile_Comparator(MTile const *a, MTile const *b) {
         if (indexA > indexB) {
             return 1;
         }
-        else {
-            return 0;
-        }
     }
 
     return 0;
