@@ -10,6 +10,7 @@ struct MTile {
     vec4 color;
     vec4 colorB;
     Sprite *sprite;
+    int32 spriteIndex; // @HACK: this is for debugging only
 
     int32 depth; // 0 is rendered first, then 1, etc
 };

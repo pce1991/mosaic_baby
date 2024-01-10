@@ -22,6 +22,7 @@ struct GameData {
 
 #define FOREACH_GAME(OP, ...)                   \
     OP(EmptyGame, __VA_ARGS__)                  \
+    OP(ColorStack, __VA_ARGS__)                 \
     OP(PluraLuna, __VA_ARGS__)                 \
     OP(ChristmasLights, __VA_ARGS__)                  \
     OP(MowTheLawnSimple, __VA_ARGS__)                 \
@@ -89,7 +90,14 @@ struct GameMem {
 
 GameMem GM = {};
 
+struct MDrawSpriteData {
+    vec4 color;
+    int32 spriteIndex;
+};
+
 void MDrawSprite(vec2 pos, Sprite *sprite, int32 depth = 0);
+void MDrawSprite(vec2 pos, Sprite *sprite, vec4 color, int32 depth = 0);
+void MDrawSprite(vec2 pos, Sprite *sprite, MDrawSpriteData data, int32 depth = 0);
 void MDrawCollider_AABB(vec2 position, vec2 min, vec2 max, vec4 color);
 void MDrawCollider_Rect(vec2 position, Rect rect, vec4 color);
 
@@ -132,6 +140,7 @@ vec2 TilePositionToPixel(int32 x, int32 y) {
 
 
 #include "games/chase_color.cpp"
+#include "games/color_stack.cpp"
 #include "games/herd_color.cpp"
 #include "games/mow_the_lawn.cpp"
 #include "games/christmas_lights.cpp"
@@ -164,6 +173,31 @@ GameUpdateFunc *UpdateFuncTable[] = {
 // @TODO: just give an init&update function to each game's struct
 
 
+void MDrawSprite(vec2 pos, Sprite *sprite, MDrawSpriteData data, int32 depth) {
+    int32 index = 0;
+    vec4 color_ = {};
+    
+    vec4 *colorBuffer = (vec4*)sprite->data;
+
+    vec2 cursor = pos;
+    for (int y = 0; y < sprite->height; y++) {
+        for (int x = 0; x < sprite->width; x++) {
+            color_ = colorBuffer[index++];
+            cursor = V2(pos.x + x, pos.y + y);
+            
+            if (color_.a == 0) {
+                continue;
+            }
+
+            color_.rgb = data.color.rgb * color_.r;
+            color_.a *= data.color.a;
+            
+            SetTileColor(cursor, color_);
+            SetTileDepth(cursor, depth);
+            SetTileSprite(cursor, data.spriteIndex);
+        }
+    }
+}
 
 void MDrawSprite(vec2 pos, Sprite *sprite, int32 depth) {
     int32 index = 0;
@@ -187,6 +221,33 @@ void MDrawSprite(vec2 pos, Sprite *sprite, int32 depth) {
         }
     }
 }
+
+void MDrawSprite(vec2 pos, Sprite *sprite, vec4 color, int32 depth) {
+    int32 index = 0;
+    vec4 color_ = {};
+    
+    vec4 *colorBuffer = (vec4*)sprite->data;
+
+    vec2 cursor = pos;
+    for (int y = 0; y < sprite->height; y++) {
+        for (int x = 0; x < sprite->width; x++) {
+            color_ = colorBuffer[index++];
+            cursor = V2(pos.x + x, pos.y + y);
+            
+            if (color_.a == 0) {
+                continue;
+            }
+
+            color_.rgb = color.rgb * color_.r;
+            color_.a *= color.a;
+            
+            SetTileColor(cursor, color_);
+            SetTileDepth(cursor, depth);
+            SetTileSprite(cursor, 0);
+        }
+    }
+}
+
 
 
 void AllocateSprite(MemoryArena *arena, Sprite *sprite, int32 width, int32 height) {

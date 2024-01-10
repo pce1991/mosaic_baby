@@ -144,41 +144,42 @@ void QuicksortIterative(void *array, size_t const elemSize, int32 const count, S
     int32 top = -1;
 
     top++;
-    void *lowElem = ((u8*)array) + elemSize * low;
-    memcpy(stack, lowElem, elemSize);
+    void *lowElem = ((u8*)array) + (elemSize * low);
+    memcpy(((u8 *)stack + (top * elemSize)), lowElem, elemSize);
 
     top++;
-    void *highElem = ((u8*)array) + elemSize * high;
-    memcpy(stack, highElem, elemSize);
+    void *highElem = ((u8*)array) + (elemSize * high);
+    memcpy(((u8 *)stack + (top * elemSize)), highElem, elemSize);
 
     int32 pivot = 0;
     while (top >= 0) {
         
-        lowElem = ((u8*)array) + elemSize * top;
+        lowElem = ((u8*)stack) + (elemSize * top);
         top--;
 
-        highElem = ((u8*)array) + elemSize * top;
+        highElem = ((u8*)stack) + (elemSize * top);
         top--;
         
         pivot = QuicksortPartition_(array, elemSize, low, high, comparator, arena);
         void *pivotPrevElem = ((u8*)array + ((pivot - 1) * elemSize));
         void *pivotNextElem = ((u8*)array + ((pivot + 1) * elemSize));
 
-        
-        if (pivotPrevElem > lowElem) {
+        if (comparator(pivotPrevElem, lowElem) > 0) {
+            //if (pivotPrevElem > lowElem) {
             top++;
-            memcpy(((u8 *)stack + top), lowElem, elemSize);
+            memcpy(((u8 *)stack + (top * elemSize)), lowElem, elemSize);
 
             top++;
-            memcpy(((u8 *)stack + top), pivotPrevElem, elemSize);
+            memcpy(((u8 *)stack + (top * elemSize)), pivotPrevElem, elemSize);
         } 
 
-        if (pivotNextElem < highElem) {
+        if (comparator(pivotNextElem, highElem) < 0) {
+        //if (pivotNextElem < highElem) {
             top++;
-            memcpy(((u8 *)stack + top), pivotNextElem, elemSize);
+            memcpy(((u8 *)stack + (top * elemSize)), pivotNextElem, elemSize);
 
             top++;
-            memcpy(((u8 *)stack + top), highElem, elemSize);
+            memcpy(((u8 *)stack + (top * elemSize)), highElem, elemSize);
         }
     }
 }

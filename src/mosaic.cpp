@@ -327,41 +327,33 @@ void DrawTile(MTile *tile) {
     }
 }
 
-// @TODO: also look at the sprite when sorting. 
 int32 MTile_Comparator(MTile const *a, MTile const *b) {
-    if (a->depth < b->depth) {
+    // @NOTE: if they are using different sprites we cant defer to their position because
+    // that would create more batches, so we sort by the sprite pointer
+    if (a->sprite < b->sprite) {
         return -1;
     }
-    else if (a->depth > b->depth) {
+    else if (a->sprite > b->sprite) {
         return 1;
     }
-    else {
-        // @TODO: we need to know the start of a range for a given sprite
-        // So first we need to know how many sprites there are
-        // but also how many different depths those sprites are rendered at
-        // Then I think we just walk the sorted list and every time our depth or
-        // our sprite changes we start a new batch.
+    // else {
+    //     if (a->depth < b->depth) {
+    //         return -1;
+    //     }
+    //     else if (a->depth > b->depth) {
+    //         return 1;
+    //     }
+    //     // they have equal depth and so we use position
+    //     int32 indexA = a->position.x + (a->position.y * Mosaic->gridWidth);
+    //     int32 indexB = b->position.x + (b->position.y * Mosaic->gridWidth);
 
-        // @NOTE: if they are using different sprites we cant defer to their position because
-        // that would create more batches, so we sort by the sprite pointer
-        if (a->sprite < b->sprite) {
-            return -1;
-        }
-        else if (a->sprite > b->sprite) {
-            return 1;
-        }
-        
-        // they have equal depth and so we use position
-        int32 indexA = a->position.x + (a->position.y * Mosaic->gridWidth);
-        int32 indexB = b->position.x + (b->position.y * Mosaic->gridWidth);
-
-        if (indexA < indexB) {
-            return -1;
-        }
-        if (indexA > indexB) {
-            return 1;
-        }
-    }
+    //     if (indexA < indexB) {
+    //         return -1;
+    //     }
+    //     if (indexA > indexB) {
+    //         return 1;
+    //     }
+    // }
 
     return 0;
 }
@@ -632,6 +624,7 @@ inline void SetTileSprite(vec2 position, int32 index) {
     MTile*t = GetTile(position);
     if (t) {
         t->sprite = &GM.bokehMasks[index];
+        t->spriteIndex = index;
     }
 }
 
@@ -854,6 +847,8 @@ void MosaicRender() {
 
     for (int i = 0; i < Mosaic->tileCapacity; i++) {
         MTile* tile = &sortedTiles[i];
+
+        Print("tile %d, sprite %d", i, tile->spriteIndex);
 
         // @BUG: why are the ones on top of grid drawn on top of the others?
         {
