@@ -99,6 +99,38 @@ void Quicksort(void *array, size_t const elemSize, int32 const count, SortCompar
 }
 
 int32 QuicksortPartition_(void *array, size_t const elemSize, const int32 low, int32 const high, SortComparator comparator, MemoryArena *arena) {
+#if 1
+    void *pivot = PushSize(arena, elemSize);
+    memcpy(pivot, (uint8 *)array + (elemSize * high), elemSize);
+
+    int32 i = low - 1;
+
+    for (int j = low; j <= high - 1; j++) {
+        if (comparator((uint8 *)array + (elemSize * j),  pivot) < 0) {
+            i++;
+
+            void *temp = PushSize(arena, elemSize);
+            memcpy(temp, (uint8 *)array + (elemSize * i), elemSize);
+            memcpy((uint8 *)array + (elemSize * i),
+                   (uint8 *)array + (elemSize * j),
+                   elemSize);
+            memcpy((uint8 *)array + (elemSize * j),
+                   temp,
+                   elemSize);
+        }
+    }
+
+    void *temp = PushSize(arena, elemSize);
+    memcpy(temp, (uint8 *)array + (elemSize * (i + 1)), elemSize);
+    memcpy((uint8 *)array + (elemSize * (i + 1)),
+           (uint8 *)array + (elemSize * high),
+           elemSize);
+    memcpy((uint8 *)array + (elemSize * high),
+           temp,
+           elemSize);
+
+    return i + 1;
+#else
     void *pivot = PushSize(arena, elemSize);
     memcpy(pivot, (uint8 *)array + (elemSize * low), elemSize);
 
@@ -132,10 +164,43 @@ int32 QuicksortPartition_(void *array, size_t const elemSize, const int32 low, i
         i++;
         j--;
     }
+#endif
 }
 
 // iterative version
 void QuicksortIterative(void *array, size_t const elemSize, int32 const count, SortComparator comparator, MemoryArena *arena) {
+#if 1
+    int32 low = 0;
+    int32 high = count - 1;
+
+    //DynamicArray<int32> stack = MakeDynamicArray<int32>(Game.frameMem, high - low + 1);
+    int32 *stack = PushArray(arena, int32, high - low + 1);
+
+    int32 top = -1;
+
+    stack[++top] = low;
+    stack[++top] = high;
+    
+    int32 pivot = 0;
+    while (top >= 0) {
+
+        high = stack[top--];
+        low = stack[top--];
+        
+        pivot = QuicksortPartition_(array, elemSize, low, high, comparator, arena);
+
+        if (pivot - 1 > low) {
+            stack[++top] = low;
+            stack[++top] = pivot - 1;
+        }
+
+        if (pivot + 1 < high) {
+            stack[++top] = pivot + 1;
+            stack[++top] = high;
+        } 
+    }
+    
+#else
     int32 low = 0;
     int32 high = count;
 
@@ -159,6 +224,9 @@ void QuicksortIterative(void *array, size_t const elemSize, int32 const count, S
 
         highElem = ((u8*)stack) + (elemSize * top);
         top--;
+
+        // @BUG: problem is that our low and high values never change!! I think our stack
+        // needs to be keeping track of the indices right? 
         
         pivot = QuicksortPartition_(array, elemSize, low, high, comparator, arena);
         void *pivotPrevElem = ((u8*)array + ((pivot - 1) * elemSize));
@@ -182,4 +250,5 @@ void QuicksortIterative(void *array, size_t const elemSize, int32 const count, S
             memcpy(((u8 *)stack + (top * elemSize)), highElem, elemSize);
         }
     }
+#endif
 }

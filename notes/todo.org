@@ -36,3 +36,4 @@ It's interesting how the waves_alpha.png can create these really interesting swi
 We all have the same depth, and all the sprites are set up front 
 - so the second command is the biggest and while all those tiles have the corret sprite the command clearly doesn't
 - Quicksort could just totally be busted
+- quicksort is clearly not working correctly 

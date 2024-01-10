@@ -336,7 +336,7 @@ int32 MTile_Comparator(MTile const *a, MTile const *b) {
     else if (a->sprite > b->sprite) {
         return 1;
     }
-    else if (a->sprite == b->sprite) {
+    else {
         if (a->depth < b->depth) {
             return -1;
         }
@@ -347,12 +347,12 @@ int32 MTile_Comparator(MTile const *a, MTile const *b) {
         int32 indexA = a->position.x + (a->position.y * Mosaic->gridWidth);
         int32 indexB = b->position.x + (b->position.y * Mosaic->gridWidth);
 
-        if (indexA < indexB) {
-            return -1;
-        }
-        if (indexA > indexB) {
-            return 1;
-        }
+        // if (indexA < indexB) {
+        //     return -1;
+        // }
+        // if (indexA > indexB) {
+        //     return 1;
+        // }
     }
 
     return 0;
