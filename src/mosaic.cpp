@@ -336,24 +336,24 @@ int32 MTile_Comparator(MTile const *a, MTile const *b) {
     else if (a->sprite > b->sprite) {
         return 1;
     }
-    // else {
-    //     if (a->depth < b->depth) {
-    //         return -1;
-    //     }
-    //     else if (a->depth > b->depth) {
-    //         return 1;
-    //     }
-    //     // they have equal depth and so we use position
-    //     int32 indexA = a->position.x + (a->position.y * Mosaic->gridWidth);
-    //     int32 indexB = b->position.x + (b->position.y * Mosaic->gridWidth);
+    else if (a->sprite == b->sprite) {
+        if (a->depth < b->depth) {
+            return -1;
+        }
+        else if (a->depth > b->depth) {
+            return 1;
+        }
+        // they have equal depth and so we use position
+        int32 indexA = a->position.x + (a->position.y * Mosaic->gridWidth);
+        int32 indexB = b->position.x + (b->position.y * Mosaic->gridWidth);
 
-    //     if (indexA < indexB) {
-    //         return -1;
-    //     }
-    //     if (indexA > indexB) {
-    //         return 1;
-    //     }
-    // }
+        if (indexA < indexB) {
+            return -1;
+        }
+        if (indexA > indexB) {
+            return 1;
+        }
+    }
 
     return 0;
 }
