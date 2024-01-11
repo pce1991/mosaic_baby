@@ -146,7 +146,6 @@ void GenerateSineWaveClip(SoundClip *clip) {
    }
 }
 
-
 SoundHandle PlaySound(AudioPlayer *player, SoundClip clip, real32 volume, bool loop) {
     Sound *sound = NULL;
     
@@ -228,7 +227,7 @@ void PlayAudio(AudioPlayer *player, int32 samplesToRender, real32 *output) {
 
         sound->lastVolume = targetVolume;
 
-        sound->samplesRendered += samplesToRender;
+        sound->samplesRendered += samplesToRenderForSound;
 
         if (sound->samplesRendered >= sound->samplesInBuffer) {
             if (sound->loop) {

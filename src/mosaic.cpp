@@ -1,110 +1,5 @@
 
-#define EX_MOSAIC_CLEAN 0
-#define MY_MOSAIC 1
-#define EX_MOSAIC_BASIC 1
-#define EX_MOSAIC_PERF 1
-#define EX_MOSAIC_AUDIO 0
-#define EX_MOSAIC_RANDOM_TILES 0
-
-#define EX_MOSAIC_FILE_READ 1
-
-#define EX_MOSAIC_TILE_RENDER 1
-
-#define EX_MOSAIC_PARTICLES 0
-
-#define EX_MOSAIC_MIA 0
-
-#define EX_MOSAIC_LERP_COLORS 0
-
-#define EX_MOSAIC_SPRITE 0
-
-#define EX_MOSAIC_DYNAMIC_ARRAYS 0
-
-#define EX_MOSAIC_PHYSICS 0
-
-#define EX_MOSAIC_1 0
-#define EX_MOSAIC_2 0
-
-#define RUBE_GOLDBERG 0
-
-#define EX_MOSAIC_VARIABLES 0
-
-#define EX_MOSAIC_MOUSE_DRAWING 0
-
-#define EX_BABY_DEMO 1
-
-#define EX_MOSAIC_GRID 1
-
-
-
-#if EX_MOSAIC_CLEAN
-#include "examples/mosaic_clean.cpp"
-
-#elif MY_MOSAIC
 #include "my_mosaic.cpp"
-
-#elif EX_MOSAIC_BASIC
-#include "examples/mosaic_basic.cpp"
-
-#elif EX_MOSAIC_PERF
-#include "examples/mosaic_perf.cpp"
-
-#elif EX_MOSAIC_FILE_READ
-#include "examples/mosaic_file_reading.cpp"
-
-#elif EX_MOSAIC_TILE_RENDER
-#include "examples/mosaic_tile_renderer.cpp"
-
-#elif EX_MOSAIC_RANDOM_TILES
-#include "examples/mosaic_random_tiles.cpp"
-
-#elif EX_MOSAIC_AUDIO
-#include "examples/mosaic_audio.cpp"
-
-#elif EX_MOSAIC_PARTICLES
-#include "examples/mosaic_particles.cpp"
-
-#elif EX_MOSAIC_SPRITE
-#include "examples/mosaic_sprite.cpp"
-
-#elif EX_MOSAIC_MIA
-#include "examples/mosaic_mia.cpp"
-
-#elif EX_BABY_DEMO
-#include "examples/baby_demo.cpp"
-
-
-#elif EX_MOSAIC_LERP_COLORS
-#include "examples/lerp_colors.cpp"
-
-#elif EX_MOSAIC_DYNAMIC_ARRAYS
-#include "examples/mosaic_dynamic_arrays.cpp"
-
-#elif EX_MOSAIC_PHYSICS
-#include "examples/mosaic_physics.cpp"
-
-#elif EX_MOSAIC_1
-#include "examples/mosaic_1.cpp"
-
-#elif EX_MOSAIC_VARIABLES
-#include "examples/mosaic_variables.cpp"
-
-#elif RUBE_GOLDBERG
-#include "examples/rube_goldberg_machine.cpp"
-
-#elif EX_MOSAIC_MOUSE_DRAWING
-#include "examples/mosaic_mouse_drawing.cpp"
-
-#elif EX_MOSAIC_GRID
-#include "examples/mosaic_grid.cpp"
-
-#elif EX_MOSAIC_2
-#include "examples/mosaic_2.cpp"
-
-//#elif MACRO_NAME
-//#include "file_name.cpp"
-
-#endif
 
 
 // @NOTE: Some of this stuff is internal and you don't ever want it to change.
@@ -191,12 +86,15 @@ void SetMosaicGridSize(uint32 newWidth, uint32 newHeight) {
     Mosaic->gridOrigin = V2(0) + V2(-Mosaic->gridSize.x * 0.5f, Mosaic->gridSize.y * 0.5f);
 
     MTile*tiles = Mosaic->tiles;
+    int32 index = 0;
     for (int y = 0; y < Mosaic->gridHeight; y++) {
         for (int x = 0; x < Mosaic->gridWidth; x++) {
             MTile*tile = GetTile(x, y);
+            tile->index = index;
             tile->position = V2i(x, y);
             tile->rotation = 0;
             tile->scale = 1;
+            index++;
         }
     }
 }
@@ -327,30 +225,27 @@ void DrawTile(MTile *tile) {
     }
 }
 
-int32 MTile_Comparator(MTile const *a, MTile const *b) {
+inline int32 MTile_Comparator(MTile const *a, MTile const *b) {
     // @NOTE: if they are using different sprites we cant defer to their position because
     // that would create more batches, so we sort by the sprite pointer
-    if (a->sprite < b->sprite) {
+    if (a->depth < b->depth) {
         return -1;
     }
-    else if (a->sprite > b->sprite) {
+    else if (a->depth > b->depth) {
         return 1;
     }
     else {
-        if (a->depth < b->depth) {
+        if (a->sprite < b->sprite) {
             return -1;
         }
-        else if (a->depth > b->depth) {
+        else if (a->sprite > b->sprite) {
             return 1;
         }
-        // they have equal depth and so we use position
-        int32 indexA = a->position.x + (a->position.y * Mosaic->gridWidth);
-        int32 indexB = b->position.x + (b->position.y * Mosaic->gridWidth);
-
-        if (indexA < indexB) {
+        
+        if (a->index < b->index) {
             return -1;
         }
-        if (indexA > indexB) {
+        if (a->index > b->index) {
             return 1;
         }
     }
@@ -624,7 +519,6 @@ inline void SetTileSprite(vec2 position, int32 index) {
     MTile*t = GetTile(position);
     if (t) {
         t->sprite = &GM.bokehMasks[index];
-        t->spriteIndex = index;
     }
 }
 
@@ -848,8 +742,6 @@ void MosaicRender() {
     for (int i = 0; i < Mosaic->tileCapacity; i++) {
         MTile* tile = &sortedTiles[i];
 
-        Print("tile %d, sprite %d", i, tile->spriteIndex);
-
         // @BUG: why are the ones on top of grid drawn on top of the others?
         {
             vec2 worldPos = GridPositionToWorldPosition(tile->position);
@@ -949,5 +841,10 @@ void MyGameUpdate() {
     MosaicRender();
 
     // @TODO: get DrawSprite to work if we pass in a color
+}
+
+
+SoundHandle PlaySound(SoundClip clip, real32 volume, bool loop) {
+    return PlaySound(&Game->audioPlayer, clip, volume, loop);
 }
 

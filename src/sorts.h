@@ -108,14 +108,16 @@ int32 QuicksortPartition_(void *array, size_t const elemSize, const int32 low, i
         if (comparator((uint8 *)array + (elemSize * j),  pivot) <= 0) {
             i++;
 
-            void *temp = PushSize(arena, elemSize);
-            memcpy(temp, (uint8 *)array + (elemSize * i), elemSize);
-            memcpy((uint8 *)array + (elemSize * i),
-                   (uint8 *)array + (elemSize * j),
-                   elemSize);
-            memcpy((uint8 *)array + (elemSize * j),
-                   temp,
-                   elemSize);
+            if (i != j) {
+                void *temp = PushSize(arena, elemSize);
+                memcpy(temp, (uint8 *)array + (elemSize * i), elemSize);
+                memcpy((uint8 *)array + (elemSize * i),
+                       (uint8 *)array + (elemSize * j),
+                       elemSize);
+                memcpy((uint8 *)array + (elemSize * j),
+                       temp,
+                       elemSize);
+            }
         }
     }
 

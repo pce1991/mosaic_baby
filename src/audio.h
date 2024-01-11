@@ -90,3 +90,4 @@ real32 CalculateAmplitude(ADSREnvelope env, real32 time) {
 
     return amp;
 }
+
