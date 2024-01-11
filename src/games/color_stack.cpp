@@ -135,8 +135,6 @@ void ColorStackUpdate() {
         Data->topSoundIndex = (Data->topSoundIndex + 1) % Data->topSounds.count;
     }
 
-    // @TODO: as it falls we need to know when it passes a cell so we can play a sound
-
     if (InputPressed(Gamepad, Input_FaceA) ||
         InputPressed(Gamepad, Input_FaceB) ||
         InputPressed(Keyboard, Input_Space)) {
