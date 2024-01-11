@@ -99,12 +99,17 @@ void ColorStackInit() {
 
         //LoadSoundClip("data/sfx/flute/flute_c4.wav", PushBackPtr(&Data->sounds));
         
-        LoadSoundClip("data/sfx/flute_short/flute_c4.wav", PushBackPtr(&Data->sounds));
-        LoadSoundClip("data/sfx/flute_short/flute_e4.wav", PushBackPtr(&Data->sounds));
-        LoadSoundClip("data/sfx/flute_short/flute_g4.wav", PushBackPtr(&Data->sounds));
-        //LoadSoundClip("data/sfx/flute_short/flute_a4.wav", PushBackPtr(&Data->sounds));
-        LoadSoundClip("data/sfx/flute_short/flute_c5.wav", PushBackPtr(&Data->sounds));
-        LoadSoundClip("data/sfx/flute_short/flute_e5.wav", PushBackPtr(&Data->sounds));
+        // LoadSoundClip("data/sfx/flute_short/flute_c4.wav", PushBackPtr(&Data->sounds));
+        // LoadSoundClip("data/sfx/flute_short/flute_e4.wav", PushBackPtr(&Data->sounds));
+        // LoadSoundClip("data/sfx/flute_short/flute_g4.wav", PushBackPtr(&Data->sounds));
+        // LoadSoundClip("data/sfx/flute_short/flute_c5.wav", PushBackPtr(&Data->sounds));
+        // LoadSoundClip("data/sfx/flute_short/flute_e5.wav", PushBackPtr(&Data->sounds));
+
+        LoadSoundClip("data/sfx/marimba/Marimba_ff_C4.wav", PushBackPtr(&Data->sounds));
+        LoadSoundClip("data/sfx/marimba/Marimba_ff_E4.wav", PushBackPtr(&Data->sounds)); 
+        LoadSoundClip("data/sfx/marimba/Marimba_ff_G4.wav", PushBackPtr(&Data->sounds));
+        LoadSoundClip("data/sfx/marimba/Marimba_ff_C5.wav", PushBackPtr(&Data->sounds));
+        LoadSoundClip("data/sfx/marimba/Marimba_ff_E5.wav", PushBackPtr(&Data->sounds)); 
     }
 
     {
@@ -202,10 +207,11 @@ void ColorStackUpdate() {
             vec2 cellPosition = TilePositionToPixel(cell->gridPosition.x, cell->gridPosition.y);
 
             if (piece->position.y >= cellPosition.y && prevPosition.y < cellPosition.y) {
-                //PlaySound(Data->sounds[RandiRange(0, Data->sounds.count)], 0.3f);
+                PlaySound(Data->sounds[RandiRange(0, Data->sounds.count)], 0.3f);
+
                 int32 index = Data->fallingSoundIndices[Data->fallingSoundIndex];
                 Data->fallingSoundIndex = (Data->fallingSoundIndex + 1) % Data->fallingSoundIndices.count;
-                PlaySound(Data->sounds[index], 0.5f);
+                //PlaySound(Data->sounds[index], 0.5f);
             }
         }
 
