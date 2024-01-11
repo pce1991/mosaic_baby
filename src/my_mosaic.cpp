@@ -92,6 +92,7 @@ GameMem GM = {};
 
 struct MDrawSpriteData {
     vec4 color;
+    vec4 colorB;
     int32 spriteIndex;
 };
 
@@ -176,6 +177,7 @@ GameUpdateFunc *UpdateFuncTable[] = {
 void MDrawSprite(vec2 pos, Sprite *sprite, MDrawSpriteData data, int32 depth) {
     int32 index = 0;
     vec4 color_ = {};
+    vec4 colorB_ = {};
     
     vec4 *colorBuffer = (vec4*)sprite->data;
 
@@ -191,8 +193,13 @@ void MDrawSprite(vec2 pos, Sprite *sprite, MDrawSpriteData data, int32 depth) {
 
             color_.rgb = data.color.rgb * color_.r;
             color_.a *= data.color.a;
+
+            colorB_.rgb = data.colorB.rgb * color_.r;
+            colorB_.a *= data.colorB.a;
             
             SetTileColor(cursor, color_);
+            SetTileColorB(cursor, colorB_);
+            
             SetTileDepth(cursor, depth);
             SetTileSprite(cursor, data.spriteIndex);
         }

@@ -30,7 +30,11 @@ struct ColorStackData : GameData {
     DynamicArray<CSPiece> pieces;
 
     DynamicArray<SoundClip> sounds;
+
     DynamicArray<SoundClip> fallingSounds;
+
+    DynamicArray<int32> fallingSoundIndices;
+    int32 fallingSoundIndex;
 
     DynamicArray<SoundClip> topSounds;
     int32 topSoundIndex;
@@ -97,23 +101,30 @@ void ColorStackInit() {
         
         LoadSoundClip("data/sfx/flute_short/flute_c4.wav", PushBackPtr(&Data->sounds));
         LoadSoundClip("data/sfx/flute_short/flute_e4.wav", PushBackPtr(&Data->sounds));
-        //LoadSoundClip("data/sfx/flute_short/flute_g4.wav", PushBackPtr(&Data->sounds));
+        LoadSoundClip("data/sfx/flute_short/flute_g4.wav", PushBackPtr(&Data->sounds));
         //LoadSoundClip("data/sfx/flute_short/flute_a4.wav", PushBackPtr(&Data->sounds));
         LoadSoundClip("data/sfx/flute_short/flute_c5.wav", PushBackPtr(&Data->sounds));
         LoadSoundClip("data/sfx/flute_short/flute_e5.wav", PushBackPtr(&Data->sounds));
     }
 
     {
+        Data->fallingSoundIndices = MakeDynamicArray<int32>(&GM.gameArena, 7);
+        PushBack(&Data->fallingSoundIndices, 0);
+        PushBack(&Data->fallingSoundIndices, 1);
+        PushBack(&Data->fallingSoundIndices, 2);
+        PushBack(&Data->fallingSoundIndices, 3);
+        PushBack(&Data->fallingSoundIndices, 4);
+        PushBack(&Data->fallingSoundIndices, 2);
+        PushBack(&Data->fallingSoundIndices, 4);
+    }
+
+    {
         Data->topSounds = MakeDynamicArray<SoundClip>(&GM.gameArena, 16);
         
         LoadSoundClip("data/sfx/flute/flute_c3.wav", PushBackPtr(&Data->topSounds));
-        LoadSoundClip("data/sfx/flute/flute_e3.wav", PushBackPtr(&Data->topSounds));
         LoadSoundClip("data/sfx/flute/flute_g3.wav", PushBackPtr(&Data->topSounds));
+        LoadSoundClip("data/sfx/flute/flute_c3.wav", PushBackPtr(&Data->topSounds));
         LoadSoundClip("data/sfx/flute/flute_e3.wav", PushBackPtr(&Data->topSounds));
-        
-        // LoadSoundClip("data/sfx/flute/flute_f3.wav", PushBackPtr(&Data->sounds));
-        // LoadSoundClip("data/sfx/flute/flute_g3.wav", PushBackPtr(&Data->sounds));
-        // LoadSoundClip("data/sfx/flute/flute_b3.wav", PushBackPtr(&Data->sounds));
     }
 }
 
@@ -122,7 +133,7 @@ void ColorStackUpdate() {
 
     Data->columnTimer += DeltaTime;
 
-    real32 rate = 0.4f;
+    real32 rate = 1.0f;
     if (Data->columnTimer >= rate) {
         Data->columnTimer -= rate;
         Data->columnIndex = (Data->columnIndex + 1) % GridWidth;
@@ -191,7 +202,10 @@ void ColorStackUpdate() {
             vec2 cellPosition = TilePositionToPixel(cell->gridPosition.x, cell->gridPosition.y);
 
             if (piece->position.y >= cellPosition.y && prevPosition.y < cellPosition.y) {
-                PlaySound(Data->sounds[RandiRange(0, Data->sounds.count)], 0.3f);
+                //PlaySound(Data->sounds[RandiRange(0, Data->sounds.count)], 0.3f);
+                int32 index = Data->fallingSoundIndices[Data->fallingSoundIndex];
+                Data->fallingSoundIndex = (Data->fallingSoundIndex + 1) % Data->fallingSoundIndices.count;
+                PlaySound(Data->sounds[index], 0.5f);
             }
         }
 
@@ -200,7 +214,7 @@ void ColorStackUpdate() {
         
         if (piece->position.y >= cellPosition.y && !piece->atRest) {
             piece->atRest = true;
-            PlaySound(Data->sounds[RandiRange(0, Data->sounds.count)], 1.0f);
+            //PlaySound(Data->sounds[RandiRange(0, Data->sounds.count)], 1.0f);
             
             piece->velocity = V2(0);
             piece->position = cellPosition;
@@ -220,6 +234,7 @@ void ColorStackUpdate() {
     For (i, Mosaic->tileCapacity) {
         MTile *tile = &Mosaic->tiles[i];
         SetTileSprite(V2(tile->position.x, tile->position.y), 0);
+        
         tile->scale = 1.8f + (0.3f * sinf(Time + (i * 0.1f)));
         tile->rotation = (Time * 0.2f) + (i * 0.1f);
         tile->color = V4(0);
@@ -239,6 +254,11 @@ void ColorStackUpdate() {
         vec2 cursor = TilePositionToPixel(gridCursor.x, gridCursor.y);
         
         For (r, Data->rowCount) {
+            MDrawSpriteData spriteData = {};
+            spriteData.color = colors[c];
+            spriteData.colorB = colors[c] * 0.5f;
+            spriteData.spriteIndex = 0;
+            
             MDrawSprite(cursor, &Data->ringSprite, colors[c], 1);
             
             gridCursor.y++;
