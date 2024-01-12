@@ -105,11 +105,12 @@ void ColorStackInit() {
         // LoadSoundClip("data/sfx/flute_short/flute_c5.wav", PushBackPtr(&Data->sounds));
         // LoadSoundClip("data/sfx/flute_short/flute_e5.wav", PushBackPtr(&Data->sounds));
 
-        LoadSoundClip("data/sfx/marimba/Marimba_ff_C4.wav", PushBackPtr(&Data->sounds));
-        LoadSoundClip("data/sfx/marimba/Marimba_ff_E4.wav", PushBackPtr(&Data->sounds)); 
-        LoadSoundClip("data/sfx/marimba/Marimba_ff_G4.wav", PushBackPtr(&Data->sounds));
         LoadSoundClip("data/sfx/marimba/Marimba_ff_C5.wav", PushBackPtr(&Data->sounds));
         LoadSoundClip("data/sfx/marimba/Marimba_ff_E5.wav", PushBackPtr(&Data->sounds)); 
+        LoadSoundClip("data/sfx/marimba/Marimba_ff_G5.wav", PushBackPtr(&Data->sounds));
+        //LoadSoundClip("data/sfx/marimba/Marimba_ff_A5.wav", PushBackPtr(&Data->sounds));
+        LoadSoundClip("data/sfx/marimba/Marimba_ff_C6.wav", PushBackPtr(&Data->sounds));
+        LoadSoundClip("data/sfx/marimba/Marimba_ff_E6.wav", PushBackPtr(&Data->sounds));
     }
 
     {
@@ -125,11 +126,18 @@ void ColorStackInit() {
 
     {
         Data->topSounds = MakeDynamicArray<SoundClip>(&GM.gameArena, 16);
+
+        LoadSoundClip("data/sfx/marimba/Marimba_ff_C3.wav", PushBackPtr(&Data->topSounds));
+        LoadSoundClip("data/sfx/marimba/Marimba_ff_E3.wav", PushBackPtr(&Data->topSounds));
+        LoadSoundClip("data/sfx/marimba/Marimba_ff_G3.wav", PushBackPtr(&Data->topSounds));
+        LoadSoundClip("data/sfx/marimba/Marimba_ff_A3.wav", PushBackPtr(&Data->topSounds));
+        LoadSoundClip("data/sfx/marimba/Marimba_ff_C4.wav", PushBackPtr(&Data->topSounds));
+        LoadSoundClip("data/sfx/marimba/Marimba_ff_E4.wav", PushBackPtr(&Data->topSounds)); 
         
-        LoadSoundClip("data/sfx/flute/flute_c3.wav", PushBackPtr(&Data->topSounds));
-        LoadSoundClip("data/sfx/flute/flute_g3.wav", PushBackPtr(&Data->topSounds));
-        LoadSoundClip("data/sfx/flute/flute_c3.wav", PushBackPtr(&Data->topSounds));
-        LoadSoundClip("data/sfx/flute/flute_e3.wav", PushBackPtr(&Data->topSounds));
+        // LoadSoundClip("data/sfx/flute/flute_c3.wav", PushBackPtr(&Data->topSounds));
+        // LoadSoundClip("data/sfx/flute/flute_g3.wav", PushBackPtr(&Data->topSounds));
+        // LoadSoundClip("data/sfx/flute/flute_c3.wav", PushBackPtr(&Data->topSounds));
+        // LoadSoundClip("data/sfx/flute/flute_e3.wav", PushBackPtr(&Data->topSounds));
     }
 }
 
@@ -138,22 +146,49 @@ void ColorStackUpdate() {
 
     Data->columnTimer += DeltaTime;
 
-    real32 rate = 1.0f;
-    if (Data->columnTimer >= rate) {
+    real32 rate = 0.4f;
+    //if (Data->columnTimer >= rate) {
+    if (InputPressed(Gamepad, Input_FaceB)) {
         Data->columnTimer -= rate;
         Data->columnIndex = (Data->columnIndex + 1) % GridWidth;
 
         CSPiece *piece = &Data->pieces[Data->pieces.count - 1];
         piece->position = TilePositionToPixel(Data->columnIndex, 0);
 
-        //PlaySound(Data->topSounds[RandiRange(0, Data->topSounds.count)], 0.3f);
-        PlaySound(Data->topSounds[Data->topSoundIndex], 0.3f);
+        PlaySound(Data->topSounds[RandiRange(0, Data->topSounds.count)], 0.3f);
+        //PlaySound(Data->topSounds[Data->topSoundIndex], 0.3f);
         Data->topSoundIndex = (Data->topSoundIndex + 1) % Data->topSounds.count;
     }
 
     if (InputPressed(Gamepad, Input_FaceA) ||
-        InputPressed(Gamepad, Input_FaceB) ||
+        //InputPressed(Gamepad, Input_FaceB) ||
         InputPressed(Keyboard, Input_Space)) {
+
+        // -  1 because we're checking if we tried to place a piece when we're out of room.
+        if (Data->pieces.count - 1 == (Data->columns.count * Data->rowCount)) {
+            For (c, Data->columns.count) {
+                For (r, Data->columns[c].cells.count) {
+                    CSCell *cell = &Data->columns[c].cells[r];
+                    cell->occupied = false;
+                }
+            }
+
+            Data->columnIndex = 0;
+            Data->columnTimer = 0;
+            DynamicArrayClear(&Data->pieces);
+
+            {
+                CSPiece piece = {};
+                piece.colorIndex = 0;
+                piece.position = V2(0, 0);
+                piece.velocity = V2(0);
+
+                Data->pieces = MakeDynamicArray<CSPiece>(&GM.gameArena, 128);
+
+                PushBack(&Data->pieces, piece);
+            }
+        }
+        else {
         PlaySound(Data->sounds[RandiRange(0, Data->sounds.count)], 1.0f);
         
         CSPiece *piece = &Data->pieces[Data->pieces.count - 1];
@@ -184,14 +219,18 @@ void ColorStackUpdate() {
             piece->colDest = columnIndex;
             piece->rowDest = rowIndex;
 
+            int32 currColorIndex = piece->colorIndex;
+
             {
                 CSPiece piece = {};
-                piece.colorIndex = RandiRange(0, Data->columns.count);
+                // Don't ever want to repeat the same color.
+                piece.colorIndex = (currColorIndex + RandiRange(1, Data->columns.count)) % Data->columns.count;
                 piece.position = TilePositionToPixel(Data->columnIndex, 0);
                 piece.velocity = V2(0);
 
                 PushBack(&Data->pieces, piece);
             }
+        }
         }
     }
 
@@ -254,6 +293,7 @@ void ColorStackUpdate() {
 
         MDrawSprite(piece->position, &Data->dotSprite, spriteData, 0);
     }
+
 
     For (c, Data->columns.count) {
         vec2i gridCursor = V2i(c, 1);
