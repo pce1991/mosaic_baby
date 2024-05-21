@@ -148,7 +148,9 @@ void ColorStackUpdate() {
 
     real32 rate = 0.4f;
     //if (Data->columnTimer >= rate) {
-    if (InputPressed(Gamepad, Input_FaceB)) {
+    if (InputPressed(Gamepad, Input_FaceB) ||
+        InputPressed(Mouse, Input_MouseRight)
+        ) {
         Data->columnTimer -= rate;
         Data->columnIndex = (Data->columnIndex + 1) % GridWidth;
 
@@ -161,6 +163,7 @@ void ColorStackUpdate() {
     }
 
     if (InputPressed(Gamepad, Input_FaceA) ||
+        InputPressed(Mouse, Input_MouseLeft) ||
         //InputPressed(Gamepad, Input_FaceB) ||
         InputPressed(Keyboard, Input_Space)) {
 
